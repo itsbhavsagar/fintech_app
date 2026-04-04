@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Pressable,
   Text,
@@ -15,7 +15,7 @@ import { ChatInput } from "../src/components/ui/ChatInput";
 import { AITypingIndicator } from "../src/components/ui/AITypingIndicator";
 import { useAssistant } from "../src/hooks/useAssistant";
 import { useVoiceSearch } from "../src/hooks/useVoiceSearch";
-import { portfolioInvestments, properties } from "../src/constants/mockData";
+import { usePortfolio, useProperties } from "../src/hooks/useBackend";
 
 const suggestions = [
   "I have ₹50,000, what should I invest in?",
@@ -28,9 +28,24 @@ export default function AssistantScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const {
+    data: portfolio,
+    isLoading: portfolioLoading,
+    isError: portfolioError,
+  } = usePortfolio();
+  const {
+    data: properties,
+    isLoading: propertiesLoading,
+    isError: propertiesError,
+  } = useProperties();
+
+  const investments = portfolio?.investments ?? [];
+  const propertyData = properties ?? [];
+  const isLoading = portfolioLoading || propertiesLoading;
+
   const { messages, loading, input, setInput, sendMessage } = useAssistant(
-    portfolioInvestments,
-    properties,
+    investments,
+    propertyData,
   );
   const {
     isRecording,
@@ -54,6 +69,29 @@ export default function AssistantScreen() {
     }
     await startRecording();
   };
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-lg font-semibold text-text">
+          Loading assistant data...
+        </Text>
+      </View>
+    );
+  }
+
+  if (portfolioError || propertiesError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-lg font-semibold text-text">
+          Unable to load assistant context
+        </Text>
+        <Text className="mt-2 text-sm text-textSecondary text-center">
+          Please try again later.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView

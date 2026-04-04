@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "../../src/components/ui/Button";
 import { Input } from "../../src/components/ui/Input";
 import { useHaptics } from "../../src/hooks/useHaptics";
+import { getToken, login } from "../../src/lib/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -13,14 +14,32 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getToken();
+      if (token) {
+        router.replace("/home");
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const handleSignIn = async () => {
+    setError(null);
     setLoading(true);
     await light();
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      await login(email.trim(), password);
       router.replace("/home");
-    }, 600);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,7 +81,12 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
         </View>
-        <View className="mt-8">
+        {error ? (
+          <View className="rounded-3xl bg-errorLight p-3">
+            <Text className="text-sm font-medium text-error">{error}</Text>
+          </View>
+        ) : null}
+        <View className="mt-4">
           <Button onPress={handleSignIn} loading={loading} className="w-full">
             Sign In
           </Button>

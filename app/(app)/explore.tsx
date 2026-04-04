@@ -3,9 +3,10 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Property, properties } from "../../src/constants/mockData";
+import { Property } from "../../src/types/api";
 import { PropertyCard } from "../../src/components/property/PropertyCard";
 import { useVoiceSearch } from "../../src/hooks/useVoiceSearch";
+import { useProperties } from "../../src/hooks/useBackend";
 
 const typeOptions = [
   "All",
@@ -28,6 +29,7 @@ export default function ExploreScreen() {
     useState<(typeof returnsOptions)[number]>("Any");
   const { transcript, isRecording, startRecording, stopRecording } =
     useVoiceSearch();
+  const { data: properties = [], isLoading } = useProperties();
 
   const filtered = useMemo(() => {
     return properties.filter((property) => {
@@ -52,7 +54,7 @@ export default function ExploreScreen() {
               : returnsValue >= 12;
       return matchesQuery && matchesType && matchesCity && matchesReturns;
     });
-  }, [query, typeFilter, cityFilter, returnsFilter]);
+  }, [query, typeFilter, cityFilter, returnsFilter, properties]);
 
   const handleVoice = async () => {
     if (isRecording) {
@@ -143,7 +145,15 @@ export default function ExploreScreen() {
         ))}
       </View>
 
-      {filtered.length === 0 && (
+      {isLoading && (
+        <View className="items-center justify-center py-20">
+          <Text className="text-lg font-semibold text-text">
+            Loading properties...
+          </Text>
+        </View>
+      )}
+
+      {!isLoading && filtered.length === 0 && (
         <View className="items-center justify-center py-20">
           <Text className="text-lg font-semibold text-text">
             No properties found

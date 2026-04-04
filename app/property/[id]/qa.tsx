@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Text,
   View,
@@ -15,7 +15,8 @@ import { ChatInput } from "../../../src/components/ui/ChatInput";
 import { AITypingIndicator } from "../../../src/components/ui/AITypingIndicator";
 import { usePropertyQA } from "../../../src/hooks/usePropertyQA";
 import { useVoiceSearch } from "../../../src/hooks/useVoiceSearch";
-import { properties } from "../../../src/constants/mockData";
+import { useProperty } from "../../../src/hooks/useBackend";
+import type { Property } from "../../../src/types/api";
 
 const SUGGESTED_QUESTIONS = [
   "Is this good for long term?",
@@ -29,15 +30,12 @@ export default function PropertyQA() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const id = typeof params.id === "string" ? params.id : "";
+  const { data: property, isLoading, isError, error } = useProperty(id);
+  const propertyForQA = property ?? ({} as Property);
 
-  const property = useMemo(
-    () => properties.find((item) => item.id === params.id),
-    [params.id],
-  );
-
-  const { messages, loading, input, setInput, sendMessage } = usePropertyQA(
-    property ?? properties[0],
-  );
+  const { messages, loading, input, setInput, sendMessage } =
+    usePropertyQA(propertyForQA);
 
   const {
     isRecording,
@@ -66,10 +64,25 @@ export default function PropertyQA() {
     setInput(question);
   };
 
-  if (!property) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-base text-text">Property not found.</Text>
+        <Text className="text-lg font-semibold text-text">
+          Loading property assistant...
+        </Text>
+      </View>
+    );
+  }
+
+  if (isError || !property) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-base font-semibold text-text">
+          Property not found.
+        </Text>
+        <Text className="mt-2 text-sm text-textSecondary text-center">
+          {(error as Error)?.message ?? "Please try again later."}
+        </Text>
       </View>
     );
   }
@@ -84,7 +97,6 @@ export default function PropertyQA() {
         style={{ paddingTop: insets.top + 8 }}
       >
         <View className="flex-row items-center gap-3">
-          {/* Back button */}
           <Pressable
             onPress={() => router.back()}
             className="h-9 w-9 items-center justify-center rounded-full bg-surface border border-border"

@@ -1,19 +1,45 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { ScreenWrapper } from "../../src/components/layout/ScreenWrapper";
-import {
-  Notification,
-  notifications as initialNotifications,
-} from "../../src/constants/mockData";
+import { useNotifications } from "../../src/hooks/useBackend";
+import type { Notification } from "../../src/types/api";
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const { data, isLoading, isError } = useNotifications();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    if (data) {
+      setNotifications(data);
+    }
+  }, [data]);
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => notification.unread).length,
     [notifications],
   );
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper scrollable className="bg-background">
+        <Text className="text-base text-text">Loading notifications...</Text>
+      </ScreenWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ScreenWrapper scrollable className="bg-background px-6">
+        <Text className="text-base font-semibold text-text">
+          Unable to load notifications.
+        </Text>
+        <Text className="mt-2 text-sm text-textSecondary">
+          Please try again later.
+        </Text>
+      </ScreenWrapper>
+    );
+  }
 
   const markAllRead = () => {
     setNotifications((current) =>

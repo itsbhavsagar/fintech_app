@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String        @id @default(uuid())
+  email       String        @unique
+  phone       String?
+  name        String?
+  password    String
+  kycStatus   String        @default("pending")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  investments Investment[]
+  sessions    Session[]
+  watchlist   Watchlist[]
+  transactions Transaction[]
+}
+
+model Property {
+  id                 String        @id @default(uuid())
+  title              String
+  slug               String        @unique
+  city               String
+  state              String
+  location           String
+  type               String
+  assetClass         String
+  minimumInvestment  Int
+  totalValue         Float
+  totalUnits         Int
+  fundedUnits        Int
+  availableUnits     Int
+  funded             Int
+  expectedReturn     String
+  occupancy          Float
+  leaseTerm          String
+  highlights         String[]
+  riskLevel          String
+  description        String?
+  summary            String?
+  images             String[]
+  tenants            String[]
+  isFeatured         Boolean       @default(false)
+  isNew              Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  investments        Investment[]
+  sessions           Session[]
+  watchlists         Watchlist[]
+  chunks             Chunk[]
+  transactions       Transaction[]
+}
+
+model Investment {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  property      Property @relation(fields: [propertyId], references: [id])
+  propertyId    String
+  units         Int
+  amount        Float
+  currentValue  Float    @default(0)
+  returnPercent String   @default("0%")
+  createdAt     DateTime @default(now())
+}
+
+model Session {
+  id         String    @id @default(uuid())
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  property   Property? @relation(fields: [propertyId], references: [id])
+  propertyId String?
+  type       String
+  createdAt  DateTime  @default(now())
+  messages   Message[]
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  session    Session  @relation(fields: [sessionId], references: [id])
+  sessionId  String
+  role       String
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model Chunk {
+  id         String   @id @default(uuid())
+  property   Property @relation(fields: [propertyId], references: [id])
+  propertyId String
+  text       String
+  embedding  Float[]
+  createdAt  DateTime @default(now())
+}
+
+model Watchlist {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  property   Property @relation(fields: [propertyId], references: [id])
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model Transaction {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  property   Property? @relation(fields: [propertyId], references: [id])
+  propertyId String?
+  type       String
+  amount     Float
+  createdAt  DateTime @default(now())
+}

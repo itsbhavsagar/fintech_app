@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { streamChat } from "../lib/groq";
-import type { Property } from "../constants/mockData";
+import type { Property } from "../types/api";
 
 export const usePropertySummary = () => {
   const [summary, setSummary] = useState<string | null>(null);

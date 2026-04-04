@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ScreenWrapper } from "../src/components/layout/ScreenWrapper";
-import { transactions } from "../src/constants/mockData";
+import { useTransactions } from "../src/hooks/useBackend";
 
 const filterOptions = ["All", "Investments", "Returns", "Withdrawals"] as const;
 
@@ -13,15 +13,16 @@ const monthLabel = (dateString: string) => {
 
 export default function TransactionsScreen() {
   const [filter, setFilter] = useState<(typeof filterOptions)[number]>("All");
+  const { data: transactions, isLoading, isError, error } = useTransactions();
 
   const filtered = useMemo(() => {
-    return transactions.filter((item) => {
+    return (transactions ?? []).filter((item) => {
       if (filter === "All") return true;
       if (filter === "Investments") return item.type === "Investment";
       if (filter === "Returns") return item.type === "Return";
       return item.type === "Withdrawal";
     });
-  }, [filter]);
+  }, [filter, transactions]);
 
   const grouped = useMemo(() => {
     return filtered.reduce<Record<string, typeof filtered>>((groups, item) => {
@@ -39,6 +40,33 @@ export default function TransactionsScreen() {
     if (type === "Return") return "cash";
     return "wallet";
   };
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper scrollable className="bg-background">
+        <View className="items-center justify-center py-20">
+          <Text className="text-lg font-semibold text-text">
+            Loading transactions...
+          </Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ScreenWrapper scrollable className="bg-background">
+        <View className="items-center justify-center py-20 px-6">
+          <Text className="text-lg font-semibold text-text">
+            Unable to load transactions
+          </Text>
+          <Text className="mt-2 text-sm text-textSecondary text-center">
+            {(error as Error)?.message ?? "Please try again later."}
+          </Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper scrollable className="bg-background">

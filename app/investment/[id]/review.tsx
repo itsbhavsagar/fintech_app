@@ -1,23 +1,36 @@
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { properties } from "../../../src/constants/mockData";
+import { useProperty } from "../../../src/hooks/useBackend";
 import { Button } from "../../../src/components/ui/Button";
 
 export default function InvestmentReviewScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const property = useMemo(
-    () => properties.find((item) => item.id === params.id),
-    [params.id],
-  );
+  const id = typeof params.id === "string" ? params.id : "";
+  const { data: property, isLoading, isError, error } = useProperty(id);
   const units = Number(params.units) || 1;
   const [accepted, setAccepted] = useState(false);
 
-  if (!property) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-base text-text">Property not found.</Text>
+        <Text className="text-lg font-semibold text-text">
+          Loading investment review...
+        </Text>
+      </View>
+    );
+  }
+
+  if (isError || !property) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-base font-semibold text-text">
+          Property not found.
+        </Text>
+        <Text className="mt-2 text-sm text-textSecondary text-center">
+          {(error as Error)?.message ?? "Please try again."}
+        </Text>
       </View>
     );
   }
@@ -92,8 +105,8 @@ export default function InvestmentReviewScreen() {
       <Button
         onPress={() =>
           router.push({
-            pathname: `/investment/${property.id}/confirm`,
-            params: { units: String(units) },
+            pathname: "/investment/[id]/confirm",
+            params: { id: property.id, units: String(units) },
           })
         }
         disabled={!accepted}

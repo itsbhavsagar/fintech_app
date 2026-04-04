@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { PortfolioInvestment } from "../../constants/mockData";
+import { PortfolioInvestment } from "../../types/api";
 
 export type InvestmentCardProps = {
   investment: PortfolioInvestment;

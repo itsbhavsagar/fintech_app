@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Property } from "../../constants/mockData";
+import { Property } from "../../types/api";
 import { ReturnsBadge } from "./ReturnsBadge";
 
 export type PropertyCardSmallProps = {

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { GroqMessage, streamChat } from "../lib/groq";
-import type { Property } from "../constants/mockData";
+import type { Property } from "../types/api";
 
 export type QAEntry = {
   role: "user" | "assistant";

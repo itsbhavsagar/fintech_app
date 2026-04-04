@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../../src/components/ui/Button";
 import { Input } from "../../src/components/ui/Input";
 import { useHaptics } from "../../src/hooks/useHaptics";
+import { getToken, register } from "../../src/lib/auth";
 
 const getStrength = (value: string) => {
   if (value.length >= 12 && /[A-Z]/.test(value) && /\d/.test(value)) {
@@ -28,13 +29,44 @@ export default function SignUpScreen() {
 
   const passwordStrength = useMemo(() => getStrength(password), [password]);
 
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = await getToken();
+      if (token) {
+        router.replace("/home");
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
   const handleSignUp = async () => {
+    setError(null);
     setLoading(true);
     await light();
-    setTimeout(() => {
+
+    if (!email || !password || !fullName) {
+      setError("Please fill in all required fields.");
       setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await register(fullName.trim(), email.trim(), password, phone.trim());
       router.replace("/auth/kyc");
-    }, 600);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -92,6 +124,11 @@ export default function SignUpScreen() {
           secureTextEntry={!showPassword}
         />
       </View>
+      {error ? (
+        <View className="rounded-3xl bg-errorLight p-3">
+          <Text className="text-sm font-medium text-error">{error}</Text>
+        </View>
+      ) : null}
       <View className="mt-8">
         <Button onPress={handleSignUp} loading={loading} className="w-full">
           Sign Up

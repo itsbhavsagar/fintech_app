@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getToken } from "../src/lib/auth";
 
 const ONBOARDING_KEY = "onboardingSeen";
 
@@ -17,8 +18,8 @@ export default function Index() {
         return;
       }
 
-      router.replace("/auth/login");
-      // router.replace("/onboarding");
+      const token = await getToken();
+      router.replace(token ? "/home" : "/auth/login");
     };
 
     checkFlow().finally(() => setLoading(false));

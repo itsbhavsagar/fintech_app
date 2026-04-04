@@ -1,47 +1,98 @@
 import { useCallback, useState } from "react";
 import { GroqMessage, streamChat } from "../lib/groq";
-import type { PortfolioInvestment } from "../constants/mockData";
+import type { PortfolioInvestment } from "../types/api";
+
+type Insights = {
+  insight: string;
+  risk: string;
+  opportunity: string;
+  action: string;
+};
 
 export const usePortfolioInsights = (portfolio: PortfolioInvestment[]) => {
-  const [insights, setInsights] = useState("");
+  const [insights, setInsights] = useState<Insights | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   const generateInsights = useCallback(async () => {
-    setLoading(true);
-    setInsights("");
+    if (loading || hasGenerated) return;
 
-    const systemPrompt = `You are a real estate investment advisor for BrickShare. Provide portfolio insights, diversification advice, and suggestions based on the portfolio holdings.`;
-    const userPrompt = `Portfolio investments: ${JSON.stringify(portfolio)}`;
+    setLoading(true);
+    setInsights(null);
+
+    const systemPrompt = `
+You are a sharp real estate investment advisor.
+
+STRICT RULES:
+- Return ONLY valid JSON
+- No markdown
+- No explanations
+- Max 1 sentence per field
+
+Format:
+{
+  "insight": "...",
+  "risk": "...",
+  "opportunity": "...",
+  "action": "..."
+}
+`;
+
+    const userPrompt = `Portfolio: ${JSON.stringify(portfolio)}`;
 
     const groqMessages: GroqMessage[] = [{ role: "user", content: userPrompt }];
 
     try {
-      const stream = await streamChat(groqMessages, systemPrompt);
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let insightText = "";
+      let fullText = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
+      await streamChat(
+        groqMessages,
+        systemPrompt,
+        (chunk: string) => {
+          fullText += chunk;
+        },
+        () => {
+          try {
+            const parsed = JSON.parse(fullText.trim());
 
-        if (value) {
-          insightText += decoder.decode(value, { stream: true });
-          setInsights(insightText);
-        }
-      }
+            setInsights({
+              insight: parsed.insight ?? "",
+              risk: parsed.risk ?? "",
+              opportunity: parsed.opportunity ?? "",
+              action: parsed.action ?? "",
+            });
+
+            setHasGenerated(true);
+          } catch (error) {
+            console.error("Insights parse error:", fullText);
+
+            setInsights({
+              insight: "Unable to generate insights right now.",
+              risk: "",
+              opportunity: "",
+              action: "",
+            });
+          }
+        },
+      );
     } catch (error) {
-      setInsights("Unable to generate portfolio insights at this time.");
+      console.error("Insights error:", error);
+
+      setInsights({
+        insight: "Something went wrong while generating insights.",
+        risk: "",
+        opportunity: "",
+        action: "",
+      });
     } finally {
       setLoading(false);
     }
-  }, [portfolio]);
+  }, [portfolio, loading, hasGenerated]);
 
   return {
     insights,
     loading,
+    hasGenerated,
     generateInsights,
   };
 };

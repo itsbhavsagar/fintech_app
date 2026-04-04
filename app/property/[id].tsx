@@ -6,7 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { ReturnsBadge } from "../../src/components/property/ReturnsBadge";
 import { OccupancyBar } from "../../src/components/property/OccupancyBar";
-import { properties } from "../../src/constants/mockData";
+import { useProperty } from "../../src/hooks/useBackend";
 import { usePropertySummary } from "../../src/hooks/usePropertySummary";
 import { width } from "../../src/hooks/useDimensions";
 
@@ -35,18 +35,31 @@ export default function PropertyDetailScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const property = useMemo(
-    () => properties.find((item) => item.id === params.id),
-    [params.id],
-  );
+  const id = typeof params.id === "string" ? params.id : "";
+  const { data: property, isLoading, isError, error } = useProperty(id);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView | null>(null);
   const { summary, loading, generated, generateSummary } = usePropertySummary();
 
-  if (!property) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <Text className="text-lg text-text">Property not found.</Text>
+        <Text className="text-lg font-semibold text-text">
+          Loading property details...
+        </Text>
+      </View>
+    );
+  }
+
+  if (isError || !property) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-lg font-semibold text-text">
+          Property not found.
+        </Text>
+        <Text className="mt-2 text-sm text-textSecondary text-center">
+          {(error as Error)?.message ?? "Please try another listing."}
+        </Text>
       </View>
     );
   }
@@ -204,7 +217,6 @@ export default function PropertyDetailScreen() {
                 </View>
               )}
 
-              {/* Summary text — streams in */}
               {summary && (
                 <View className="mt-2">
                   <Text
@@ -267,7 +279,10 @@ export default function PropertyDetailScreen() {
           <View className="flex-row items-center justify-between gap-3">
             <Pressable
               onPress={() =>
-                router.push({ pathname: `/property/${property.id}/qa` })
+                router.push({
+                  pathname: "/property/[id]/qa",
+                  params: { id: property.id },
+                })
               }
               className="flex-1 items-center justify-center rounded-3xl border border-border bg-white px-4 py-3"
             >
@@ -275,7 +290,10 @@ export default function PropertyDetailScreen() {
             </Pressable>
             <Pressable
               onPress={() =>
-                router.push({ pathname: `/investment/${property.id}` })
+                router.push({
+                  pathname: "/investment/[id]",
+                  params: { id: property.id },
+                })
               }
               className="flex-1 items-center justify-center rounded-3xl bg-primary px-4 py-3"
             >

@@ -1,5 +1,5 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,36 +8,117 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { PropertyCard } from "../../src/components/property/PropertyCard";
 import { PropertyCardSmall } from "../../src/components/property/PropertyCardSmall";
 
-import {
-  Property,
-  properties,
-  portfolioInvestments,
-} from "../../src/constants/mockData";
+import { AuthUser, getStoredUser } from "../../src/lib/auth";
+import { Property } from "../../src/types/api";
+import { useProperties, usePortfolio } from "../../src/hooks/useBackend";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const storedUser = await getStoredUser();
+      setUser(storedUser);
+    };
+
+    loadUser();
+  }, []);
+
+  const {
+    data: properties,
+    isLoading: propertiesLoading,
+    isError: propertiesError,
+    error: propertiesFetchError,
+  } = useProperties();
+
+  const {
+    data: portfolio,
+    isLoading: portfolioLoading,
+    isError: portfolioError,
+    error: portfolioFetchError,
+  } = usePortfolio();
+
+  console.log("HomeScreen: propertiesLoading", propertiesLoading);
+  console.log("HomeScreen: portfolioLoading", portfolioLoading);
+  console.log("HomeScreen: properties", properties);
+  console.log("HomeScreen: portfolio", portfolio);
+  console.log("HomeScreen: propertiesError", propertiesError);
+  console.log("HomeScreen: propertiesFetchError", propertiesFetchError);
+  console.log("HomeScreen: portfolioError", portfolioError);
+  console.log("HomeScreen: portfolioFetchError", portfolioFetchError);
 
   const featured = useMemo(
-    () => properties.filter((property) => property.isFeatured),
-    [],
+    () => properties?.filter((property) => property.isFeatured) || [],
+    [properties],
   );
 
   const trending = useMemo(
-    () => properties.filter((property) => !property.isFeatured),
-    [],
+    () => properties?.filter((property) => !property.isFeatured) || [],
+    [properties],
   );
 
-  const totalInvested = portfolioInvestments.reduce(
-    (sum, item) => sum + item.invested,
-    0,
-  );
+  const totalInvested = portfolio?.totalInvested || 0;
 
-  const currentValue = portfolioInvestments.reduce(
-    (sum, item) => sum + item.currentValue,
-    0,
-  );
+  const currentValue =
+    portfolio?.investments?.reduce((sum, item) => sum + item.currentValue, 0) ||
+    0;
 
   const totalReturns = currentValue - totalInvested;
+
+  if (propertiesLoading || portfolioLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16, paddingBottom: 0 }}
+        >
+          <View className="mb-6 flex-row items-center justify-between">
+            <View>
+              <Text className="text-xl font-semibold text-text">
+                Good morning, {user?.name ?? "Investor"}
+              </Text>
+              <Text className="mt-1 text-sm text-textSecondary">
+                Loading your dashboard...
+              </Text>
+            </View>
+          </View>
+          <View className="mb-6 rounded-3xl overflow-hidden bg-gray-200 h-40" />
+          <View className="mb-4">
+            <Text className="text-lg font-semibold text-text">
+              Featured Properties
+            </Text>
+          </View>
+          <View className="h-32 bg-gray-200 rounded-lg mb-8" />
+          <View className="mb-4">
+            <Text className="text-lg font-semibold text-text">
+              Trending Now
+            </Text>
+          </View>
+          <View className="h-64 bg-gray-200 rounded-lg" />
+        </ScrollView>
+      </View>
+    );
+  }
+
+  const hasError = propertiesError || portfolioError;
+  const errorMessage =
+    (propertiesFetchError as Error | null)?.message ||
+    (portfolioFetchError as Error | null)?.message ||
+    "Unknown error";
+
+  if (hasError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-xl font-semibold text-text mb-3">
+          Unable to load dashboard
+        </Text>
+        <Text className="text-sm text-textSecondary text-center">
+          {errorMessage}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">
@@ -47,8 +128,8 @@ export default function HomeScreen() {
       >
         <View className="mb-6 flex-row items-center justify-between">
           <View>
-            <Text className="text-xl font-semibold text-text">
-              Good morning, Aman
+            <Text className="text-xl font-semibold text-text capitalize">
+              hi, {user?.name ?? "Investor"}
             </Text>
             <Text className="mt-1 text-sm text-textSecondary">
               Explore curated commercial opportunities.
@@ -110,11 +191,15 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <PropertyCard
               property={item}
-              onPress={() => router.push({ pathname: `/property/${item.id}` })}
+              onPress={() =>
+                router.push({
+                  pathname: "/property/[id]",
+                  params: { id: item.id },
+                })
+              }
               className="mr-4 mb-2"
             />
           )}
-          estimatedItemSize={320}
           horizontal
           showsHorizontalScrollIndicator={false}
         />
@@ -132,10 +217,14 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <PropertyCardSmall
               property={item}
-              onPress={() => router.push({ pathname: `/property/${item.id}` })}
+              onPress={() =>
+                router.push({
+                  pathname: "/property/[id]",
+                  params: { id: item.id },
+                })
+              }
             />
           )}
-          estimatedItemSize={120}
           showsVerticalScrollIndicator={false}
         />
       </ScrollView>
