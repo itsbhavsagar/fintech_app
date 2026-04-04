@@ -1,13 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-indigo-600">
+    <View className="flex-1 bg-indigo-600">
       <StatusBar barStyle="light-content" />
 
       {/* Decorative circles */}
@@ -63,6 +62,6 @@ export default function WelcomeScreen() {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

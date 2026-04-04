@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { PropertyCard } from "../../src/components/property/PropertyCard";
@@ -41,10 +40,10 @@ export default function HomeScreen() {
   const totalReturns = currentValue - totalInvested;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 0 }}
       >
         <View className="mb-6 flex-row items-center justify-between">
           <View>
@@ -96,7 +95,6 @@ export default function HomeScreen() {
           </LinearGradient>
         </View>
 
-        {/* FEATURED */}
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="text-lg font-semibold text-text">
             Featured Properties
@@ -121,7 +119,6 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
         />
 
-        {/* TRENDING */}
         <View className="mt-8 mb-4 flex-row items-center justify-between">
           <Text className="text-lg font-semibold text-text">Trending Now</Text>
 
@@ -143,13 +140,12 @@ export default function HomeScreen() {
         />
       </ScrollView>
 
-      {/* FLOATING ACTION BUTTON */}
       <Pressable
         onPress={() => router.push("/assistant")}
         className="absolute bottom-8 right-6 h-16 w-16 items-center justify-center rounded-full bg-primary shadow-lg"
       >
         <Ionicons name="business" size={28} color="#FFFFFF" />
       </Pressable>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -5,7 +5,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "../../src/components/ui/Button";
 import { Input } from "../../src/components/ui/Input";
 import { useHaptics } from "../../src/hooks/useHaptics";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -26,8 +25,8 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-background px-6 py-10">
-      <SafeAreaView className="flex-1">
-        <View className="mb-10">
+      <View className="flex-1">
+        <View className="mb-10 mt-8">
           <Text className="text-4xl font-bold text-text">BrickShare</Text>
           <Text className="mt-4 text-lg text-textSecondary">Welcome back</Text>
         </View>
@@ -97,7 +96,7 @@ export default function LoginScreen() {
             <Text className="text-sm font-semibold text-primary">Sign Up</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }

@@ -3,11 +3,9 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Property } from "../../src/constants/mockData";
+import { Property, properties } from "../../src/constants/mockData";
 import { PropertyCard } from "../../src/components/property/PropertyCard";
-import { ScreenWrapper } from "../../src/components/layout/ScreenWrapper";
 import { useVoiceSearch } from "../../src/hooks/useVoiceSearch";
-import { properties } from "../../src/constants/mockData";
 
 const typeOptions = [
   "All",
@@ -28,7 +26,7 @@ export default function ExploreScreen() {
     useState<(typeof cityOptions)[number]>("All");
   const [returnsFilter, setReturnsFilter] =
     useState<(typeof returnsOptions)[number]>("Any");
-  const { transcript, isRecording, loading, startRecording, stopRecording } =
+  const { transcript, isRecording, startRecording, stopRecording } =
     useVoiceSearch();
 
   const filtered = useMemo(() => {
@@ -39,7 +37,6 @@ export default function ExploreScreen() {
             .toLowerCase()
             .includes(query.toLowerCase())
         : true;
-
       const matchesType =
         typeFilter === "All" ? true : property.type === typeFilter;
       const matchesCity =
@@ -53,7 +50,6 @@ export default function ExploreScreen() {
             : returnsFilter === "10%+"
               ? returnsValue >= 10
               : returnsValue >= 12;
-
       return matchesQuery && matchesType && matchesCity && matchesReturns;
     });
   }, [query, typeFilter, cityFilter, returnsFilter]);
@@ -61,17 +57,14 @@ export default function ExploreScreen() {
   const handleVoice = async () => {
     if (isRecording) {
       await stopRecording();
-      if (transcript) {
-        setQuery(transcript);
-      }
+      if (transcript) setQuery(transcript);
       return;
     }
-
     await startRecording();
   };
 
-  return (
-    <ScreenWrapper scrollable className="bg-background">
+  const Header = (
+    <View className="px-4 pt-4">
       <View className="mb-6">
         <Text className="text-2xl font-semibold text-text">
           Explore opportunities
@@ -80,6 +73,7 @@ export default function ExploreScreen() {
           Search across cities, sectors, and returns.
         </Text>
       </View>
+
       <View className="mb-4 flex-row items-center rounded-3xl border border-border bg-surface px-4 py-3">
         <Ionicons name="search-outline" size={20} color="#4F46E5" />
         <TextInput
@@ -100,6 +94,7 @@ export default function ExploreScreen() {
           />
         </Pressable>
       </View>
+
       <View className="mb-4 flex-row flex-wrap gap-2">
         {typeOptions.map((option) => (
           <Pressable
@@ -108,13 +103,14 @@ export default function ExploreScreen() {
             className={`rounded-full border px-4 py-2 ${typeFilter === option ? "border-primary bg-surfaceRaised" : "border-border bg-white"}`}
           >
             <Text
-              className={`${typeFilter === option ? "text-primary" : "text-textSecondary"} text-sm font-semibold`}
+              className={`text-sm font-semibold ${typeFilter === option ? "text-primary" : "text-textSecondary"}`}
             >
               {option}
             </Text>
           </Pressable>
         ))}
       </View>
+
       <View className="mb-4 flex-row flex-wrap gap-2">
         {cityOptions.map((option) => (
           <Pressable
@@ -123,13 +119,14 @@ export default function ExploreScreen() {
             className={`rounded-full border px-4 py-2 ${cityFilter === option ? "border-primary bg-surfaceRaised" : "border-border bg-white"}`}
           >
             <Text
-              className={`${cityFilter === option ? "text-primary" : "text-textSecondary"} text-sm font-semibold`}
+              className={`text-sm font-semibold ${cityFilter === option ? "text-primary" : "text-textSecondary"}`}
             >
               {option}
             </Text>
           </Pressable>
         ))}
       </View>
+
       <View className="mb-6 flex-row flex-wrap gap-2">
         {returnsOptions.map((option) => (
           <Pressable
@@ -138,14 +135,15 @@ export default function ExploreScreen() {
             className={`rounded-full border px-4 py-2 ${returnsFilter === option ? "border-primary bg-surfaceRaised" : "border-border bg-white"}`}
           >
             <Text
-              className={`${returnsFilter === option ? "text-primary" : "text-textSecondary"} text-sm font-semibold`}
+              className={`text-sm font-semibold ${returnsFilter === option ? "text-primary" : "text-textSecondary"}`}
             >
               {option}
             </Text>
           </Pressable>
         ))}
       </View>
-      {filtered.length === 0 ? (
+
+      {filtered.length === 0 && (
         <View className="items-center justify-center py-20">
           <Text className="text-lg font-semibold text-text">
             No properties found
@@ -154,26 +152,35 @@ export default function ExploreScreen() {
             Try changing filters or search terms.
           </Text>
         </View>
-      ) : (
-        <FlashList<Property>
-          data={filtered}
-          renderItem={({ item }) => (
-            <View className="w-1/2 pr-2 pb-4">
-              <PropertyCard
-                property={item}
-                onPress={() =>
-                  router.push({ pathname: `/property/${item.id}` })
-                }
-                className="h-full"
-              />
-            </View>
-          )}
-          estimatedItemSize={240}
-          numColumns={2}
-          contentContainerClassName="pb-28"
-          showsVerticalScrollIndicator={false}
-        />
       )}
-    </ScreenWrapper>
+    </View>
+  );
+
+  return (
+    <View className="flex-1 bg-background">
+      <FlashList<Property>
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        estimatedItemSize={280}
+        ListHeaderComponent={Header}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item, index }) => (
+          <View
+            style={{
+              flex: 1,
+              marginLeft: index % 2 !== 0 ? 8 : 0,
+              marginBottom: 12,
+            }}
+          >
+            <PropertyCard
+              property={item}
+              onPress={() => router.push({ pathname: `/property/${item.id}` })}
+            />
+          </View>
+        )}
+      />
+    </View>
   );
 }

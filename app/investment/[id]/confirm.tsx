@@ -57,6 +57,7 @@ export default function InvestmentConfirmScreen() {
           Your units have been booked successfully.
         </Text>
       </View>
+
       <View className="mt-10 rounded-3xl bg-white p-6 shadow-sm">
         <Text className="text-sm text-textSecondary">Amount invested</Text>
         <Text className="mt-2 text-2xl font-semibold text-text">
@@ -69,7 +70,8 @@ export default function InvestmentConfirmScreen() {
           ₹{expectedReturn.toLocaleString("en-IN")}
         </Text>
       </View>
-      <View className="mt-8 space-y-4">
+
+      <View className="mt-8 gap-4">
         <Button
           onPress={() => router.push({ pathname: "/portfolio" })}
           className="w-full"

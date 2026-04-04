@@ -1,6 +1,14 @@
-import { useMemo } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useRef, useEffect } from "react";
+import {
+  Pressable,
+  Text,
+  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ChatBubble } from "../src/components/ui/ChatBubble";
 import { ChatInput } from "../src/components/ui/ChatInput";
@@ -18,6 +26,8 @@ const suggestions = [
 
 export default function AssistantScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
   const { messages, loading, input, setInput, sendMessage } = useAssistant(
     portfolioInvestments,
     properties,
@@ -30,20 +40,30 @@ export default function AssistantScreen() {
     stopRecording,
   } = useVoiceSearch();
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [messages, loading]);
+
   const handleVoicePress = async () => {
     if (isRecording) {
       await stopRecording();
-      if (transcript) {
-        setInput(transcript);
-      }
+      if (transcript) setInput(transcript);
       return;
     }
     await startRecording();
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="border-b border-border px-4 py-4">
+    <KeyboardAvoidingView
+      className="flex-1 bg-background"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <View
+        className="border-b border-border px-4 pb-4"
+        style={{ paddingTop: insets.top + 8 }}
+      >
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-lg font-semibold text-text">
@@ -61,9 +81,16 @@ export default function AssistantScreen() {
           </Pressable>
         </View>
       </View>
-      <View className="flex-1 px-4 py-4">
+
+      <ScrollView
+        ref={scrollRef}
+        className="flex-1 px-4"
+        contentContainerStyle={{ paddingVertical: 16, flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {messages.length === 0 ? (
-          <View className="mb-8 space-y-4">
+          <View className="gap-3">
             {suggestions.map((prompt) => (
               <Pressable
                 key={prompt}
@@ -83,12 +110,13 @@ export default function AssistantScreen() {
             />
           ))
         )}
-        {loading ? (
+        {loading && (
           <View className="mt-4">
             <AITypingIndicator />
           </View>
-        ) : null}
-      </View>
+        )}
+      </ScrollView>
+
       <ChatInput
         value={input}
         onChangeText={setInput}
@@ -97,6 +125,6 @@ export default function AssistantScreen() {
         isRecording={isRecording}
         disabled={loading || voiceLoading}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }

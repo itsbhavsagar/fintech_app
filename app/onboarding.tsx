@@ -1,17 +1,10 @@
 import { useRef, useState } from "react";
-import {
-  Dimensions,
-  ScrollView,
-  Text,
-  View,
-  ImageBackground,
-} from "react-native";
+import { ScrollView, Text, View, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "../src/components/ui/Button";
-
-const { width, height } = Dimensions.get("window");
+import { width, height } from "../src/hooks/useDimensions";
 
 const slides = [
   {
@@ -52,7 +45,6 @@ export default function OnboardingScreen() {
 
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     router.replace("/auth/login");
- 
   };
 
   const handleScroll = (event: any) => {

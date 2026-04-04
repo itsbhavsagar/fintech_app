@@ -1,9 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
@@ -11,6 +8,7 @@ import { ReturnsBadge } from "../../src/components/property/ReturnsBadge";
 import { OccupancyBar } from "../../src/components/property/OccupancyBar";
 import { properties } from "../../src/constants/mockData";
 import { usePropertySummary } from "../../src/hooks/usePropertySummary";
+import { width } from "../../src/hooks/useDimensions";
 
 const reviews = [
   {
@@ -54,14 +52,12 @@ export default function PropertyDetailScreen() {
   }
 
   const handleImageScroll = (event: any) => {
-    const index = Math.round(
-      event.nativeEvent.contentOffset.x / Dimensions.get("window").width,
-    );
+    const index = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(index);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
       <View className="flex-1 bg-background">
         <ScrollView showsVerticalScrollIndicator={false}>
           <View className="relative h-96">
@@ -78,7 +74,7 @@ export default function PropertyDetailScreen() {
                   key={image}
                   source={{ uri: image }}
                   contentFit="cover"
-                  style={{ width: Dimensions.get("window").width, height: 384 }}
+                  style={{ width, height: 384 }}
                   className="h-96 w-screen"
                 />
               ))}
@@ -257,6 +253,6 @@ export default function PropertyDetailScreen() {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
