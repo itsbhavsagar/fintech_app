@@ -4,10 +4,8 @@ import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
-
 import { PropertyCard } from "../../src/components/property/PropertyCard";
 import { PropertyCardSmall } from "../../src/components/property/PropertyCardSmall";
-
 import { AuthUser, getStoredUser } from "../../src/lib/auth";
 import { Property } from "../../src/types/api";
 import { useProperties, usePortfolio } from "../../src/hooks/useBackend";
@@ -76,7 +74,7 @@ export default function HomeScreen() {
           <View className="mb-6 flex-row items-center justify-between">
             <View>
               <Text className="text-xl font-semibold text-text">
-                Good morning, {user?.name ?? "Investor"}
+                Hi, {user?.name ?? "Investor"}
               </Text>
               <Text className="mt-1 text-sm text-textSecondary">
                 Loading your dashboard...
