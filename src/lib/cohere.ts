@@ -1,10 +1,8 @@
+import { getCohereApiKey } from "./env";
+
 // Cohere client for generating embeddings used by BrickShare AI features.
 export const generateEmbedding = async (text: string): Promise<number[]> => {
-  const apiKey = process.env.EXPO_PUBLIC_COHERE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("Missing EXPO_PUBLIC_COHERE_API_KEY");
-  }
+  const apiKey = getCohereApiKey();
 
   const response = await fetch("https://api.cohere.com/v1/embed", {
     method: "POST",

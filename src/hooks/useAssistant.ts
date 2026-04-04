@@ -1,73 +1,96 @@
-import { useCallback, useState } from "react";
-import { GroqMessage, streamChat } from "../lib/groq";
-import type { PortfolioInvestment, Property } from "../constants/mockData";
+import { useState } from "react";
+import { streamChat, GroqMessage } from "../lib/groq";
 
-export type AssistantEntry = {
+type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-export const useAssistant = (
-  portfolio: PortfolioInvestment[],
-  properties: Property[],
-) => {
-  const [messages, setMessages] = useState<AssistantEntry[]>([]);
+export function useAssistant(portfolio: any[], properties: any[]) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
 
-  const sendMessage = useCallback(async () => {
-    if (!input.trim()) {
-      return;
-    }
+  const systemPrompt = `You are BrickShare's investment assistant.
+Help users make smart fractional real estate investment decisions.
 
-    const userMessage: AssistantEntry = { role: "user", content: input.trim() };
-    setMessages((current) => [...current, userMessage]);
-    setLoading(true);
+User Portfolio:
+${JSON.stringify(portfolio, null, 2)}
+
+Available Properties:
+${JSON.stringify(
+  properties.map((p) => ({
+    id: p.id,
+    title: p.title,
+    location: p.location,
+    type: p.type,
+    expectedReturn: p.expectedReturn,
+    riskLevel: p.riskLevel,
+    minimumInvestment: p.minimumInvestment,
+    occupancy: p.occupancy,
+  })),
+  null,
+  2,
+)}
+
+Answer clearly and concisely. Use INR formatting.
+If asked about portfolio performance — analyse the mock data above.
+Keep responses under 150 words.`;
+
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
+
+    const userMessage: Message = {
+      role: "user",
+      content: input.trim(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput("");
+    setLoading(true);
 
-    const systemPrompt = `You are a real estate investment advisor for BrickShare. Use the following user portfolio and available properties to answer the question: Portfolio ${JSON.stringify(
-      portfolio,
-    )}; Properties ${JSON.stringify(properties)}`;
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-    const groqMessages: GroqMessage[] = [
-      { role: "user", content: userMessage.content },
-    ];
+    const groqMessages: GroqMessage[] = updatedMessages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
     try {
-      const stream = await streamChat(groqMessages, systemPrompt);
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let assistantText = "";
+      await streamChat(
+        groqMessages,
+        systemPrompt,
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-
-        if (value) {
-          assistantText += decoder.decode(value, { stream: true });
-          setMessages((current) => {
-            const previous = current.filter(
-              (entry) => entry.role !== "assistant",
-            );
-            return [...previous, { role: "assistant", content: assistantText }];
+        (chunk) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content + chunk,
+            };
+            return updated;
           });
-        }
-      }
-    } catch (error) {
-      setMessages((current) => [
-        ...current,
-        {
-          role: "assistant",
-          content:
-            "I am unable to respond right now. Please try again shortly.",
         },
-      ]);
-    } finally {
+
+        () => {
+          setLoading(false);
+        },
+      );
+    } catch (error) {
+      console.error("Assistant sendMessage failed", error);
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          content: "Sorry, something went wrong. Please try again.",
+        };
+        return updated;
+      });
       setLoading(false);
     }
-  }, [input, portfolio, properties]);
+  };
 
   return {
     messages,
@@ -76,4 +99,4 @@ export const useAssistant = (
     setInput,
     sendMessage,
   };
-};
+}

@@ -1,9 +1,7 @@
-export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
-  const apiKey = process.env.EXPO_PUBLIC_GROQ_API_KEY;
+import { getGroqApiKey } from "./env";
 
-  if (!apiKey) {
-    throw new Error("Missing EXPO_PUBLIC_GROQ_API_KEY");
-  }
+export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+  const apiKey = getGroqApiKey();
 
   const formData = new FormData();
   formData.append("file", audioBlob, "audio.wav");

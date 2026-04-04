@@ -41,13 +41,13 @@ export default function PropertyDetailScreen() {
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView | null>(null);
-  const { summary, loading, generateSummary } = usePropertySummary();
+  const { summary, loading, generated, generateSummary } = usePropertySummary();
 
   if (!property) {
     return (
-      <ScreenWrapper className="items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-background">
         <Text className="text-lg text-text">Property not found.</Text>
-      </ScreenWrapper>
+      </View>
     );
   }
 
@@ -139,7 +139,8 @@ export default function PropertyDetailScreen() {
               </Text>
               <View className="mb-3 h-3 overflow-hidden rounded-full bg-border">
                 <View
-                  className={`h-full bg-primary flex-[${property.funded}]`}
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${property.funded}%` }}
                 />
               </View>
               <Text className="text-sm text-textSecondary">
@@ -161,27 +162,59 @@ export default function PropertyDetailScreen() {
               ))}
             </View>
 
-            <View className="mb-6 rounded-3xl bg-white p-4 shadow-sm">
-              <Text className="mb-4 text-base font-semibold text-text">
-                AI Summary
-              </Text>
-              <Pressable
-                onPress={() => generateSummary(property)}
-                className="rounded-3xl bg-primary px-4 py-3"
-              >
-                <Text className="text-center text-base font-semibold text-white">
-                  Get AI Summary
+            <View className="mb-6 rounded-3xl bg-white p-5 shadow-sm">
+              <View className="mb-4 flex-row items-center justify-between">
+                <Text className="text-base font-semibold text-text">
+                  AI Summary
                 </Text>
-              </Pressable>
-              {loading ? (
-                <Text className="mt-4 text-sm text-textSecondary">
-                  Generating summary…
-                </Text>
-              ) : summary ? (
-                <Text className="mt-4 text-sm leading-6 text-text">
-                  {summary.overview}
-                </Text>
-              ) : null}
+                {generated && (
+                  <View className="flex-row items-center gap-1 rounded-full bg-primaryLight px-3 py-1">
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={12}
+                      color="#4F46E5"
+                    />
+                    <Text className="text-xs font-medium text-primary">
+                      Generated
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {!generated && !loading && (
+                <Pressable
+                  onPress={() => generateSummary(property)}
+                  className="flex-row items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3"
+                >
+                  <Ionicons name="sparkles" size={16} color="#fff" />
+                  <Text className="text-base font-semibold text-white">
+                    Get AI Summary
+                  </Text>
+                </Pressable>
+              )}
+
+              {loading && (
+                <View className="flex-row items-center gap-2 py-2">
+                  <View className="h-2 w-2 rounded-full bg-primary opacity-60" />
+                  <View className="h-2 w-2 rounded-full bg-primary opacity-40" />
+                  <View className="h-2 w-2 rounded-full bg-primary opacity-20" />
+                  <Text className="ml-1 text-sm text-textSecondary">
+                    Generating summary...
+                  </Text>
+                </View>
+              )}
+
+              {/* Summary text — streams in */}
+              {summary && (
+                <View className="mt-2">
+                  <Text
+                    className="text-sm leading-7 text-text"
+                    style={{ letterSpacing: 0.1 }}
+                  >
+                    {summary}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View className="mb-6 rounded-3xl bg-white p-4 shadow-sm">

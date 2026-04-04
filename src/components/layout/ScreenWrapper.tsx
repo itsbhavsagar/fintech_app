@@ -19,7 +19,7 @@ export const ScreenWrapper = ({
       <View className={`flex-1 bg-background ${className ?? ""}`}>
         <ScrollView
           className="flex-1"
-          contentContainerClassName={`px-4 py-4 pb-24 ${contentContainerClassName ?? ""}`}
+          contentContainerClassName={`px-4 py-4 pb-0 ${contentContainerClassName ?? ""}`}
           showsVerticalScrollIndicator={false}
         >
           {children}
