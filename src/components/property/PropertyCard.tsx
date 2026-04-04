@@ -26,8 +26,9 @@ export const PropertyCard = ({
     >
       <View className="relative h-52 overflow-hidden rounded-t-3xl">
         <Image
-          source={property.images[0]}
+          source={{ uri: property.images[0] }}
           contentFit="cover"
+          style={{ width: "100%", height: "100%" }}
           className="h-full w-full"
         />
         <View className="absolute inset-x-0 top-4 flex-row items-center justify-between px-4">

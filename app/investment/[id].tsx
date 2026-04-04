@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { properties } from "../../src/constants/mockData";
@@ -9,6 +13,7 @@ import { useHaptics } from "../../src/hooks/useHaptics";
 export default function InvestmentSelectScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const property = useMemo(
     () => properties.find((item) => item.id === params.id),
     [params.id],
@@ -35,70 +40,79 @@ export default function InvestmentSelectScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background px-6 py-8">
-      <View className="mb-6 rounded-3xl bg-white p-5 shadow-sm">
-        <Text className="text-base font-semibold text-text">
-          {property.title}
-        </Text>
-        <Text className="mt-2 text-sm text-textSecondary">
-          {property.location}
-        </Text>
-        <View className="mt-4 rounded-3xl bg-surface p-4">
-          <Text className="text-sm text-textSecondary">Expected return</Text>
-          <Text className="mt-2 text-2xl font-semibold text-text">
-            {property.expectedReturn}
-          </Text>
-          <Text className="mt-1 text-sm text-textSecondary">
-            {property.type} • {property.city}
-          </Text>
-        </View>
-      </View>
-
-      <View className="mb-6 rounded-3xl bg-white p-5 shadow-sm">
-        <Text className="text-base font-semibold text-text">Select units</Text>
-        <View className="mt-5 flex-row items-center justify-between rounded-3xl bg-surface px-4 py-4">
-          <Pressable
-            onPress={() => adjustUnits(-1)}
-            className="rounded-2xl bg-white p-4"
-          >
-            <Ionicons name="remove" size={24} color="#4F46E5" />
-          </Pressable>
-          <View className="items-center">
-            <Text className="text-5xl font-semibold text-text">{units}</Text>
-            <Text className="text-sm text-textSecondary">units</Text>
-          </View>
-          <Pressable
-            onPress={() => adjustUnits(1)}
-            className="rounded-2xl bg-white p-4"
-          >
-            <Ionicons name="add" size={24} color="#4F46E5" />
-          </Pressable>
-        </View>
-        <View className="mt-6 rounded-3xl bg-surface p-4">
-          <Text className="text-sm text-textSecondary">
-            Your available balance
-          </Text>
-          <Text className="mt-2 text-lg font-semibold text-text">₹150,000</Text>
-          <Text className="mt-4 text-sm text-textSecondary">
-            Projected annual returns
-          </Text>
-          <Text className="mt-2 text-lg font-semibold text-gold">
-            ₹{projectedReturn.toLocaleString("en-IN")}
-          </Text>
-        </View>
-      </View>
-
-      <Button
-        onPress={() =>
-          router.push({
-            pathname: `/investment/${property.id}/review`,
-            params: { units: String(units) },
-          })
-        }
-        className="w-full"
+    <SafeAreaView className="flex-1 bg-background">
+      <View
+        className="flex-1 bg-background px-6 py-8"
+        style={{ paddingBottom: insets.bottom ? insets.bottom + 16 : 16 }}
       >
-        Review investment
-      </Button>
-    </View>
+        <View className="mb-6 rounded-3xl bg-white p-5 shadow-sm">
+          <Text className="text-base font-semibold text-text">
+            {property.title}
+          </Text>
+          <Text className="mt-2 text-sm text-textSecondary">
+            {property.location}
+          </Text>
+          <View className="mt-4 rounded-3xl bg-surface p-4">
+            <Text className="text-sm text-textSecondary">Expected return</Text>
+            <Text className="mt-2 text-2xl font-semibold text-text">
+              {property.expectedReturn}
+            </Text>
+            <Text className="mt-1 text-sm text-textSecondary">
+              {property.type} • {property.city}
+            </Text>
+          </View>
+        </View>
+
+        <View className="mb-6 rounded-3xl bg-white p-5 shadow-sm">
+          <Text className="text-base font-semibold text-text">
+            Select units
+          </Text>
+          <View className="mt-5 flex-row items-center justify-between rounded-3xl bg-surface px-4 py-4">
+            <Pressable
+              onPress={() => adjustUnits(-1)}
+              className="rounded-2xl bg-white p-4"
+            >
+              <Ionicons name="remove" size={24} color="#4F46E5" />
+            </Pressable>
+            <View className="items-center">
+              <Text className="text-5xl font-semibold text-text">{units}</Text>
+              <Text className="text-sm text-textSecondary">units</Text>
+            </View>
+            <Pressable
+              onPress={() => adjustUnits(1)}
+              className="rounded-2xl bg-white p-4"
+            >
+              <Ionicons name="add" size={24} color="#4F46E5" />
+            </Pressable>
+          </View>
+          <View className="mt-6 rounded-3xl bg-surface p-4">
+            <Text className="text-sm text-textSecondary">
+              Your available balance
+            </Text>
+            <Text className="mt-2 text-lg font-semibold text-text">
+              ₹150,000
+            </Text>
+            <Text className="mt-4 text-sm text-textSecondary">
+              Projected annual returns
+            </Text>
+            <Text className="mt-2 text-lg font-semibold text-gold">
+              ₹{projectedReturn.toLocaleString("en-IN")}
+            </Text>
+          </View>
+        </View>
+
+        <Button
+          onPress={() =>
+            router.push({
+              pathname: `/investment/${property.id}/review`,
+              params: { units: String(units) },
+            })
+          }
+          className="w-full"
+        >
+          Review investment
+        </Button>
+      </View>
+    </SafeAreaView>
   );
 }

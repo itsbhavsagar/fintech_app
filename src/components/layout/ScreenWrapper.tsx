@@ -20,7 +20,7 @@ export const ScreenWrapper = ({
       <SafeAreaView className={`flex-1 bg-background ${className ?? ""}`}>
         <ScrollView
           className="flex-1"
-          contentContainerClassName={`px-4 py-4 pb-20 ${contentContainerClassName ?? ""}`}
+          contentContainerClassName={`px-4 py-4 pb-24 ${contentContainerClassName ?? ""}`}
           showsVerticalScrollIndicator={false}
         >
           {children}
@@ -31,7 +31,7 @@ export const ScreenWrapper = ({
 
   return (
     <SafeAreaView className={`flex-1 bg-background ${className ?? ""}`}>
-      <View className={`flex-1 px-4 py-4 ${className ?? ""}`}>{children}</View>
+      <View className="flex-1 px-4 py-4">{children}</View>
     </SafeAreaView>
   );
 };

@@ -19,8 +19,9 @@ export const PropertyCardSmall = ({
   >
     <View className="flex-row gap-3">
       <Image
-        source={property.images[0]}
+        source={{ uri: property.images[0] }}
         contentFit="cover"
+        style={{ width: 96, height: 96 }}
         className="h-24 w-24 rounded-3xl"
       />
       <View className="flex-1 justify-between">

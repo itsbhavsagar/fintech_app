@@ -17,8 +17,8 @@ export default function Index() {
         return;
       }
 
-      //   router.replace("/auth/login");
-      router.replace("/onboarding");
+      router.replace("/auth/login");
+      // router.replace("/onboarding");
     };
 
     checkFlow().finally(() => setLoading(false));

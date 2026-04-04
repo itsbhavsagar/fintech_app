@@ -52,6 +52,7 @@ export default function OnboardingScreen() {
 
     await AsyncStorage.setItem(ONBOARDING_KEY, "true");
     router.replace("/auth/login");
+ 
   };
 
   const handleScroll = (event: any) => {

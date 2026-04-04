@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Pressable, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -35,6 +36,8 @@ export const ChatInput = ({
     );
   }, [isRecording, pulse]);
 
+  const insets = useSafeAreaInsets();
+
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
   }));
@@ -42,7 +45,10 @@ export const ChatInput = ({
   const canSend = Boolean(value.trim()) && !disabled;
 
   return (
-    <View className="flex-row items-center gap-3 bg-white px-4 py-3 border-t border-border">
+    <View
+      className="flex-row items-center gap-3 bg-white px-4 py-3 border-t border-border"
+      style={{ paddingBottom: insets.bottom ? insets.bottom + 12 : 12 }}
+    >
       <View className="flex-1 rounded-2xl border border-border bg-surface px-4">
         <TextInput
           className="h-12 text-base text-text"
