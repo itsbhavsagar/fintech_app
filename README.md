@@ -4,16 +4,36 @@
 
 BrickShare is a full stack mobile application that lets users invest fractionally in Grade A commercial properties across India — offices, malls, warehouses, and coworking spaces. Built with React Native + Expo on the frontend and Express + Prisma + PostgreSQL on the backend, with AI-powered investment assistance, property Q&A, and portfolio insights.
 
+---
+
+## Screenshots
+
+<div align="center">
+  <img src="./assets/screenshots/home.jpeg" width="19%" alt="Home" />
+  <img src="./assets/screenshots/explore.jpeg" width="19%" alt="Explore" />
+  <img src="./assets/screenshots/portfolio.jpeg" width="19%" alt="Portfolio" />
+  <img src="./assets/screenshots/ai_insights.jpeg" width="19%" alt="AiInsight" />
+  <img src="./assets/screenshots/property-ai.jpeg" width="19%" alt="AI Summary" />
+  <img src="./assets/screenshots/chat.jpeg" width="19%" alt="AI Chat" />
+</div>
+
+<div align="center">
+  <img src="./assets/screenshots/assistant.jpeg" width="19%" alt="Investment Assistant" />
+</div>
+
+---
 
 ## What It Does
 
 **For investors:**
+
 - Browse Grade A commercial properties across Delhi, Noida, Gurgaon, Bangalore
 - Invest from ₹10,000 minimum — fractional ownership
 - Track portfolio value, returns, and performance in real time
 - Save properties to watchlist, view full transaction history
 
 **AI features:**
+
 - Ask any question about a property — AI answers using real property data
 - Get a streaming AI summary of any property — returns, risk, tenants, location
 - Investment Assistant — tell it your budget, it recommends properties based on your portfolio
@@ -25,40 +45,44 @@ BrickShare is a full stack mobile application that lets users invest fractionall
 ## Tech Stack
 
 ### Frontend
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| Expo | 54.x | Mobile framework |
-| React Native | 0.81 | UI layer |
-| Expo Router | 6.x | File-based routing |
-| TypeScript | 5.x | Type safety |
-| NativeWind | 4.x | Tailwind CSS for React Native |
-| TanStack Query | 5.x | Server state + caching |
-| Reanimated | 4.x | Animations |
-| Expo Haptics | — | Tactile feedback |
-| AsyncStorage | — | Token + user persistence |
+
+| Technology     | Version | Purpose                       |
+| -------------- | ------- | ----------------------------- |
+| Expo           | 54.x    | Mobile framework              |
+| React Native   | 0.81    | UI layer                      |
+| Expo Router    | 6.x     | File-based routing            |
+| TypeScript     | 5.x     | Type safety                   |
+| NativeWind     | 4.x     | Tailwind CSS for React Native |
+| TanStack Query | 5.x     | Server state + caching        |
+| Reanimated     | 4.x     | Animations                    |
+| Expo Haptics   | —       | Tactile feedback              |
+| AsyncStorage   | —       | Token + user persistence      |
 
 ### Backend
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| Node.js + Express | — | REST API server |
-| TypeScript | 5.x | Type safety |
-| Prisma | 5.x | ORM |
-| PostgreSQL | 17 | Database (Neon serverless) |
-| JWT | — | Authentication |
-| bcryptjs | — | Password hashing |
+
+| Technology        | Version | Purpose                    |
+| ----------------- | ------- | -------------------------- |
+| Node.js + Express | —       | REST API server            |
+| TypeScript        | 5.x     | Type safety                |
+| Prisma            | 5.x     | ORM                        |
+| PostgreSQL        | 17      | Database (Neon serverless) |
+| JWT               | —       | Authentication             |
+| bcryptjs          | —       | Password hashing           |
 
 ### AI / ML
-| Service | Purpose |
-|---------|---------|
-| Groq — llama-3.1-8b-instant | Chat, streaming responses |
+
+| Service                     | Purpose                     |
+| --------------------------- | --------------------------- |
+| Groq — llama-3.1-8b-instant | Chat, streaming responses   |
 | Cohere — embed-english-v3.0 | Property embeddings for RAG |
-| Groq Whisper | Voice search transcription |
+| Groq Whisper                | Voice search transcription  |
 
 ---
 
 ## Features
 
 ### Authentication
+
 - JWT-based auth with 30-day expiry
 - bcryptjs password hashing
 - Protected routes — token verified on every tab entry
@@ -66,6 +90,7 @@ BrickShare is a full stack mobile application that lets users invest fractionall
 - KYC flow — 3 steps (Personal, Bank, Documents)
 
 ### Property Discovery
+
 - Browse 8 commercial properties across 4 cities
 - Filter by type (Office, Retail, Warehouse, Coworking)
 - Filter by city (Delhi, Noida, Gurgaon, Bangalore)
@@ -75,6 +100,7 @@ BrickShare is a full stack mobile application that lets users invest fractionall
 - Bookmark to watchlist with one tap
 
 ### Property Detail
+
 - Full image carousel with pagination dots
 - Occupancy bar (colour-coded — green/yellow/red)
 - Funding progress bar
@@ -83,11 +109,13 @@ BrickShare is a full stack mobile application that lets users invest fractionall
 - Ask AI — property-specific chat
 
 ### Investment Flow
+
 - Select units — live return calculation
 - Review — platform fee (2%), total amount
 - Confirm — Reanimated success animation
 
 ### Portfolio
+
 - Live data from backend — real investments
 - Current value, invested, returns, return %
 - 6-month performance chart
@@ -95,6 +123,7 @@ BrickShare is a full stack mobile application that lets users invest fractionall
 - Individual investment cards
 
 ### AI Chat
+
 - Property Q&A — constrained to property context only
 - Investment Assistant — knows your full portfolio + all available properties
 - Streaming word-by-word responses
@@ -197,6 +226,7 @@ Chunk      — id, propertyId, text, embedding Float[] (RAG)
 ## AI Architecture
 
 ### How Streaming Works on Mobile
+
 React Native's `fetch` does not support true streaming. The full SSE response is received, parsed with a custom `parseSSEText()` function, then simulated word-by-word with 3-word chunks at 30ms delay.
 
 ```
@@ -204,12 +234,15 @@ Groq API → full SSE text → parseSSEText() → word groups → onChunk() → 
 ```
 
 ### RAG Pipeline (Property Q&A)
+
 ```
 Property data → system prompt context → Groq → streaming response
 ```
+
 Full pgvector-based RAG (Cohere embeddings + cosine similarity) is implemented in the codebase and ready for the backend migration phase.
 
 ### AI Abuse Prevention
+
 ```
 User input
   → inputGuard.ts (regex blocks injection + off-topic)
@@ -250,6 +283,7 @@ GET    /api/messages/:sessionId   Get chat history
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 20+
 - PostgreSQL database (or Neon account)
 - Groq API key
