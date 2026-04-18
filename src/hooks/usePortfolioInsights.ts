@@ -63,7 +63,7 @@ Format:
             });
 
             setHasGenerated(true);
-          } catch (error) {
+          } catch {
             console.error("Insights parse error:", fullText);
 
             setInsights({
@@ -74,9 +74,13 @@ Format:
             });
           }
         },
+        {
+          responseFormat: "json",
+          temperature: 0.2,
+        },
       );
-    } catch (error) {
-      console.error("Insights error:", error);
+    } catch {
+      console.error("Insights error");
 
       setInsights({
         insight: "Something went wrong while generating insights.",

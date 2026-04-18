@@ -1,28 +1,18 @@
 import { Router } from "express";
+import { authenticate } from "../middleware/auth";
+import {
+  formatNotificationDate,
+  normalizeTransactionType,
+} from "../lib/transactions";
 import prisma from "../prisma";
 
 const router = Router();
 
-const resolveUserId = async (req: any) => {
-  if (req.user?.id) return req.user.id;
-  if (req.query.userId) return String(req.query.userId);
-  const demoUser = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
-  return demoUser?.id ?? null;
-};
-
-const formatDate = (date: Date) =>
-  date.toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-  });
-
-router.get("/", async (req, res, next) => {
+router.get("/", authenticate, async (req, res, next) => {
   try {
-    const userId = await resolveUserId(req);
+    const userId = req.user?.id;
     if (!userId) {
-      return res.status(404).json({ error: "User not found." });
+      return res.status(401).json({ error: "Unauthorized." });
     }
 
     const [transactions, watchlist] = await Promise.all([
@@ -42,31 +32,39 @@ router.get("/", async (req, res, next) => {
 
     const notifications = [
       ...transactions.map((transaction) => ({
-        id: transaction.id,
-        title:
-          transaction.type === "Investment"
-            ? `Investment completed`
-            : transaction.type === "Return"
-              ? `Return received`
-              : "Withdrawal processed",
+        id: `transaction-${transaction.id}`,
+        title: (() => {
+          const transactionType = normalizeTransactionType(transaction.type);
+          if (transactionType === "Investment") {
+            return "Investment completed";
+          }
+          if (transactionType === "Return") {
+            return "Return received";
+          }
+          return "Withdrawal processed";
+        })(),
         description: transaction.property
-          ? `${transaction.type} of ₹${transaction.amount.toLocaleString("en-IN")} for ${transaction.property.title}`
-          : `${transaction.type} of ₹${transaction.amount.toLocaleString("en-IN")}`,
-        type:
-          transaction.type === "Investment"
-            ? "investment"
-            : transaction.type === "Return"
-              ? "returns"
-              : "price",
-        date: formatDate(transaction.createdAt),
-        unread: transaction.type !== "Return",
+          ? `${normalizeTransactionType(transaction.type)} of ₹${transaction.amount.toLocaleString("en-IN")} for ${transaction.property.title}`
+          : `${normalizeTransactionType(transaction.type)} of ₹${transaction.amount.toLocaleString("en-IN")}`,
+        type: (() => {
+          const transactionType = normalizeTransactionType(transaction.type);
+          if (transactionType === "Investment") {
+            return "investment";
+          }
+          if (transactionType === "Return") {
+            return "returns";
+          }
+          return "withdrawal";
+        })(),
+        date: formatNotificationDate(transaction.createdAt),
+        unread: normalizeTransactionType(transaction.type) !== "Return",
       })),
       ...watchlist.map((item) => ({
         id: `watchlist-${item.id}`,
         title: `Watchlist update: ${item.property.title}`,
         description: `This property is trending and may have limited availability.`,
         type: "property",
-        date: formatDate(item.createdAt),
+        date: formatNotificationDate(item.createdAt),
         unread: true,
       })),
     ];

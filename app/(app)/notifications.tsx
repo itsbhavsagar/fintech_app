@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { FlashList } from "@shopify/flash-list";
 import { ScreenWrapper } from "../../src/components/layout/ScreenWrapper";
 import { useNotifications } from "../../src/hooks/useBackend";
 import type { Notification } from "../../src/types/api";
@@ -82,12 +81,12 @@ export default function NotificationsScreen() {
         Unread {unreadCount}
       </Text>
 
-      <FlashList<Notification>
-        data={notifications}
-        renderItem={({ item }) => (
+      <View className="gap-4">
+        {notifications.map((item) => (
           <Pressable
+            key={item.id}
             onPress={() => handlePress(item.id)}
-            className="mb-4 rounded-3xl bg-white p-4 shadow-sm"
+            className="rounded-3xl bg-white p-4 shadow-sm"
           >
             <View className="flex-row items-start justify-between">
               <View className="flex-1">
@@ -104,10 +103,8 @@ export default function NotificationsScreen() {
             </View>
             <Text className="mt-3 text-xs text-textSecondary">{item.date}</Text>
           </Pressable>
-        )}
-        estimatedItemSize={120}
-        showsVerticalScrollIndicator={false}
-      />
+        ))}
+      </View>
     </ScreenWrapper>
   );
 }

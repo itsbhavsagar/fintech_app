@@ -3,7 +3,10 @@ import { Pressable, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useProperty } from "../../../src/hooks/useBackend";
+import {
+  useCreateInvestment,
+  useProperty,
+} from "../../../src/hooks/useBackend";
 import { Button } from "../../../src/components/ui/Button";
 
 export default function InvestmentReviewScreen() {
@@ -14,6 +17,8 @@ export default function InvestmentReviewScreen() {
   const { data: property, isLoading, isError, error } = useProperty(id);
   const units = Number(params.units) || 1;
   const [accepted, setAccepted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const createInvestment = useCreateInvestment();
 
   if (isLoading) {
     return (
@@ -42,6 +47,32 @@ export default function InvestmentReviewScreen() {
   const expectedReturn = Math.round(
     (amount * Number(property.expectedReturn.replace("%", ""))) / 100,
   );
+  const handleConfirm = async () => {
+    if (createInvestment.isPending) {
+      return;
+    }
+
+    setSubmitError(null);
+
+    try {
+      await createInvestment.mutateAsync({
+        propertyId: property.id,
+        units,
+        amount,
+      });
+
+      router.replace({
+        pathname: "/investment/[id]/confirm",
+        params: { id: property.id, units: String(units) },
+      });
+    } catch (mutationError) {
+      setSubmitError(
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Unable to complete your investment right now.",
+      );
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -130,6 +161,14 @@ export default function InvestmentReviewScreen() {
             I agree to the terms and conditions of this investment.
           </Text>
         </Pressable>
+
+        {submitError ? (
+          <View className="rounded-3xl bg-errorLight p-3">
+            <Text className="text-sm font-medium text-error">
+              {submitError}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View
@@ -137,13 +176,9 @@ export default function InvestmentReviewScreen() {
         style={{ paddingBottom: insets.bottom + 16 }}
       >
         <Button
-          onPress={() =>
-            router.push({
-              pathname: "/investment/[id]/confirm",
-              params: { id: property.id, units: String(units) },
-            })
-          }
-          disabled={!accepted}
+          onPress={() => void handleConfirm()}
+          disabled={!accepted || createInvestment.isPending}
+          loading={createInvestment.isPending}
           className="w-full"
         >
           Confirm investment

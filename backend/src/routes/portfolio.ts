@@ -1,22 +1,14 @@
 import { Router } from "express";
+import { authenticate } from "../middleware/auth";
 import prisma from "../prisma";
 
 const router = Router();
 
-const resolveUserId = async (req: any) => {
-  if (req.user?.id) return req.user.id;
-  if (req.query.userId) return String(req.query.userId);
-  const demoUser = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
-  return demoUser?.id ?? null;
-};
-
-router.get("/", async (req, res, next) => {
+router.get("/", authenticate, async (req, res, next) => {
   try {
-    const userId = await resolveUserId(req);
+    const userId = req.user?.id;
     if (!userId) {
-      return res.status(404).json({ error: "User not found." });
+      return res.status(401).json({ error: "Unauthorized." });
     }
 
     const investments = await prisma.investment.findMany({
@@ -31,8 +23,12 @@ router.get("/", async (req, res, next) => {
       city: investment.property.city,
       units: investment.units,
       invested: investment.amount,
-      currentValue: investment.currentValue,
-      returnPercent: investment.returnPercent,
+      currentValue:
+        investment.currentValue > 0 ? investment.currentValue : investment.amount,
+      returnPercent:
+        investment.returnPercent && investment.returnPercent !== "0%"
+          ? investment.returnPercent
+          : "0.0%",
     }));
 
     const totalInvested = formatted.reduce(

@@ -1,22 +1,14 @@
 import { Router } from "express";
+import { authenticate } from "../middleware/auth";
 import prisma from "../prisma";
 
 const router = Router();
 
-const resolveUserId = async (req: any) => {
-  if (req.user?.id) return req.user.id;
-  if (req.query.userId) return String(req.query.userId);
-  const demoUser = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
-  return demoUser?.id ?? null;
-};
-
-router.post("/", async (req, res, next) => {
+router.post("/", authenticate, async (req, res, next) => {
   try {
-    const userId = await resolveUserId(req);
+    const userId = req.user?.id;
     if (!userId) {
-      return res.status(404).json({ error: "User not found." });
+      return res.status(401).json({ error: "Unauthorized." });
     }
 
     const { propertyId, units, amount } = req.body;
@@ -27,12 +19,42 @@ router.post("/", async (req, res, next) => {
         .json({ error: "propertyId, units, and amount are required." });
     }
 
+    if (typeof units !== "number" || typeof amount !== "number") {
+      return res
+        .status(400)
+        .json({ error: "units and amount must be numbers." });
+    }
+
+    if (units <= 0 || amount <= 0) {
+      return res
+        .status(400)
+        .json({ error: "units and amount must be greater than zero." });
+    }
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { id: true, minimumInvestment: true },
+    });
+
+    if (!property) {
+      return res.status(404).json({ error: "Property not found." });
+    }
+
+    const expectedAmount = units * property.minimumInvestment;
+    if (amount !== expectedAmount) {
+      return res.status(400).json({
+        error: `Amount must match ${units} units at ₹${property.minimumInvestment.toLocaleString("en-IN")} each.`,
+      });
+    }
+
     const investment = await prisma.investment.create({
       data: {
         userId,
         propertyId,
         units,
         amount,
+        currentValue: amount,
+        returnPercent: "0.0%",
       },
     });
 
@@ -40,7 +62,7 @@ router.post("/", async (req, res, next) => {
       data: {
         userId,
         propertyId,
-        type: "investment",
+        type: "Investment",
         amount,
       },
     });

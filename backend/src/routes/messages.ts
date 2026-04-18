@@ -6,9 +6,19 @@ const router = Router();
 
 router.get("/:sessionId", authenticate, async (req, res, next) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized." });
+    }
+
     const { sessionId } = req.params;
     const messages = await prisma.message.findMany({
-      where: { sessionId },
+      where: {
+        sessionId,
+        session: {
+          userId,
+        },
+      },
       orderBy: { createdAt: "asc" },
     });
     res.json(messages);

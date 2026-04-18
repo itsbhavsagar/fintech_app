@@ -12,6 +12,7 @@ export const useVoiceSearch = () => {
   const startRecording = async () => {
     try {
       setError(null);
+      setTranscript("");
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== "granted") {
         setError("Microphone permission is required.");
@@ -25,19 +26,19 @@ export const useVoiceSearch = () => {
 
       const newRecording = new Audio.Recording();
       await newRecording.prepareToRecordAsync(
-        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY,
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
       );
       await newRecording.startAsync();
       setRecording(newRecording);
       setIsRecording(true);
-    } catch (err) {
+    } catch {
       setError("Unable to start recording.");
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = async (): Promise<string> => {
     if (!recording) {
-      return;
+      return "";
     }
 
     try {
@@ -48,15 +49,17 @@ export const useVoiceSearch = () => {
 
       if (!uri) {
         setError("Recording failed to save.");
-        return;
+        return "";
       }
 
       const response = await fetch(uri);
       const audioBlob = await response.blob();
       const text = await transcribeAudio(audioBlob);
       setTranscript(text);
-    } catch (err) {
+      return text;
+    } catch {
       setError("Unable to transcribe audio.");
+      return "";
     } finally {
       setLoading(false);
       setRecording(null);

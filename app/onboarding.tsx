@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { type ComponentProps, useRef, useState } from "react";
 import { ScrollView, Text, View, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -6,7 +6,14 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "../src/components/ui/Button";
 import { width, height } from "../src/hooks/useDimensions";
 
-const slides = [
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+const slides: {
+  icon: IoniconName;
+  title: string;
+  subtitle: string;
+  image: number;
+}[] = [
   {
     icon: "business",
     title: "Own a piece of commercial India",

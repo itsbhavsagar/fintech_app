@@ -26,7 +26,7 @@ export default function KYCScreen() {
 
   return (
     <View className="flex-1 bg-background px-6 py-8">
-      <View className="mb-8">
+      <View className="mb-8 mt-10">
         <Text className="text-3xl font-semibold text-text">Complete KYC</Text>
         <Text className="mt-2 text-sm text-textSecondary">
           Share your details to start investing safely.
@@ -120,7 +120,7 @@ export default function KYCScreen() {
           {step === steps.length - 1 ? "Submit" : "Next"}
         </Button>
         <Pressable onPress={() => router.replace("/home")}>
-          <Text className="text-center text-sm font-semibold text-primary">
+          <Text className="text-center text-sm font-semibold text-primary mt-8">
             Skip for now
           </Text>
         </Pressable>

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -10,15 +9,19 @@ export type PropertyCardProps = {
   property: Property;
   onPress?: () => void;
   className?: string;
+  bookmarked?: boolean;
+  onBookmarkPress?: () => void;
+  bookmarkDisabled?: boolean;
 };
 
 export const PropertyCard = ({
   property,
   onPress,
   className,
+  bookmarked = false,
+  onBookmarkPress,
+  bookmarkDisabled = false,
 }: PropertyCardProps) => {
-  const [bookmarked, setBookmarked] = useState(false);
-
   return (
     <Pressable
       onPress={onPress}
@@ -35,7 +38,11 @@ export const PropertyCard = ({
             {property.type}
           </Text>
           <Pressable
-            onPress={() => setBookmarked((prev) => !prev)}
+            onPress={(event) => {
+              event.stopPropagation();
+              onBookmarkPress?.();
+            }}
+            disabled={bookmarkDisabled}
             className="rounded-full bg-white/90 p-2"
           >
             <Ionicons

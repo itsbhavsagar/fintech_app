@@ -1,14 +1,18 @@
 import { useEffect } from "react";
 import { View } from "react-native";
 import Reanimated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withDelay,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
 
-const dotStyle = (delay: number) => {
+type TypingDotProps = {
+  delay: number;
+};
+
+const TypingDot = ({ delay }: TypingDotProps) => {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -19,31 +23,25 @@ const dotStyle = (delay: number) => {
     );
   }, [delay, progress]);
 
-  return useAnimatedStyle(() => ({
+  const animatedStyle = useAnimatedStyle(() => ({
     opacity: progress.value === 0 ? 0.4 : 1,
     transform: [{ scale: progress.value === 0 ? 0.9 : 1 }],
   }));
+
+  return (
+    <Reanimated.View
+      className="h-2.5 w-2.5 rounded-full bg-primary"
+      style={animatedStyle}
+    />
+  );
 };
 
 export const AITypingIndicator = () => {
-  const style1 = dotStyle(0);
-  const style2 = dotStyle(150);
-  const style3 = dotStyle(300);
-
   return (
-    <View className="flex-row items-center rounded-full bg-surface px-4 py-3">
-      <Reanimated.View
-        className="mr-2 h-2.5 w-2.5 rounded-full bg-primary"
-        style={style1}
-      />
-      <Reanimated.View
-        className="mr-2 h-2.5 w-2.5 rounded-full bg-primary"
-        style={style2}
-      />
-      <Reanimated.View
-        className="h-2.5 w-2.5 rounded-full bg-primary"
-        style={style3}
-      />
+    <View className="flex-row items-center gap-2 rounded-full bg-surface px-4 py-3">
+      <TypingDot delay={0} />
+      <TypingDot delay={150} />
+      <TypingDot delay={300} />
     </View>
   );
 };

@@ -50,7 +50,13 @@ export type Notification = {
   id: string;
   title: string;
   description: string;
-  type: "investment" | "returns" | "property" | "kyc" | "price";
+  type:
+    | "investment"
+    | "returns"
+    | "property"
+    | "kyc"
+    | "price"
+    | "withdrawal";
   date: string;
   unread: boolean;
 };

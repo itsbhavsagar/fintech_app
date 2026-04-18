@@ -1,63 +1,51 @@
-import { getGroqApiKey } from "./env";
+import { getToken } from "./auth";
+import { getApiUrl } from "./env";
 
 export type GroqMessage = {
   role: "system" | "user" | "assistant";
   content: string;
 };
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-
-function parseSSEText(raw: string): string {
-  const lines = raw.split("\n");
-  let result = "";
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith("data:")) continue;
-
-    const data = trimmed.slice(5).trim();
-    if (data === "[DONE]") break;
-
-    try {
-      const parsed = JSON.parse(data);
-      const delta = parsed?.choices?.[0]?.delta?.content;
-      if (delta) result += delta;
-    } catch {}
-  }
-
-  return result;
-}
+export type StreamChatOptions = {
+  maxTokens?: number;
+  temperature?: number;
+  responseFormat?: "json";
+};
 
 export const streamChat = async (
   messages: GroqMessage[],
   systemPrompt: string,
   onChunk: (text: string) => void,
   onDone: () => void,
+  options?: StreamChatOptions,
 ): Promise<void> => {
-  const apiKey = getGroqApiKey();
+  const token = await getToken();
+  if (!token) {
+    throw new Error("You must be logged in to use AI features.");
+  }
 
-  const response = await fetch(GROQ_API_URL, {
+  const response = await fetch(`${getApiUrl()}/api/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "system", content: systemPrompt }, ...messages],
-      stream: true,
-      max_tokens: 250,
-      temperature: 0.7,
+      messages,
+      systemPrompt,
+      maxTokens: options?.maxTokens,
+      temperature: options?.temperature,
+      responseFormat: options?.responseFormat,
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Groq API error: ${errorText}`);
+    throw new Error(`AI request failed: ${errorText}`);
   }
 
-  const raw = await response.text();
-  const fullText = parseSSEText(raw);
+  const data = (await response.json()) as { content?: string };
+  const fullText = data.content?.trim();
 
   if (!fullText) {
     onDone();

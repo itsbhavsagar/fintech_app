@@ -71,7 +71,7 @@ export default function SignUpScreen() {
 
   return (
     <View className="flex-1 bg-background px-6 py-10">
-      <View className="mb-8">
+      <View className="mb-8 mt-10">
         <Text className="text-3xl font-semibold text-text">
           Create your account
         </Text>
@@ -107,15 +107,8 @@ export default function SignUpScreen() {
           onChangeText={setPassword}
           placeholder="Create password"
           secureTextEntry={!showPassword}
-          rightElement={
-            <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-              <Text className="text-sm font-semibold text-primary">Toggle</Text>
-            </Pressable>
-          }
         />
-        <Text className={`text-sm font-semibold ${passwordStrength.color}`}>
-          Password strength: {passwordStrength.label}
-        </Text>
+
         <Input
           label="Confirm Password"
           value={confirmPassword}

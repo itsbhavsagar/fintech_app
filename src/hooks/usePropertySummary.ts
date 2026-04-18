@@ -9,6 +9,7 @@ export const usePropertySummary = () => {
 
   const generateSummary = useCallback(
     async (property: Property) => {
+      // RULE HERE :
       // Lock — once generated, never regenerate
       // until user navigates away and comes back
       if (generated || loading) return;

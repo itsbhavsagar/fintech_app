@@ -165,15 +165,6 @@ export default function ProfileScreen() {
     ? editAvatarUrl
     : (user?.avatarUrl ?? AVATAR_OPTIONS[0]);
 
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((p) => p[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "GB";
-
   return (
     <ScrollView
       className="flex-1 bg-background"

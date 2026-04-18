@@ -10,32 +10,6 @@ const getRuntimeConfig = (): Record<string, string | undefined> => {
   return extras as Record<string, string | undefined>;
 };
 
-export const getGroqApiKey = (): string => {
-  const apiKey =
-    getRuntimeConfig().EXPO_PUBLIC_GROQ_API_KEY ||
-    process.env.EXPO_PUBLIC_GROQ_API_KEY;
-  console.log("getGroqApiKey", { hasKey: !!apiKey });
-
-  if (!apiKey) {
-    throw new Error("Missing EXPO_PUBLIC_GROQ_API_KEY");
-  }
-
-  return apiKey;
-};
-
-export const getCohereApiKey = (): string => {
-  const apiKey =
-    getRuntimeConfig().EXPO_PUBLIC_COHERE_API_KEY ||
-    process.env.EXPO_PUBLIC_COHERE_API_KEY;
-  console.log("getCohereApiKey", { hasKey: !!apiKey });
-
-  if (!apiKey) {
-    throw new Error("Missing EXPO_PUBLIC_COHERE_API_KEY");
-  }
-
-  return apiKey;
-};
-
 const resolveLocalhostUrl = (apiUrl: string): string => {
   const debuggerHost =
     (Constants.manifest as any)?.debuggerHost ||
@@ -71,12 +45,6 @@ export const getApiUrl = (): string => {
   } else if (Platform.OS !== "web" && apiUrl.startsWith("http://localhost")) {
     resolvedApiUrl = resolveLocalhostUrl(apiUrl);
   }
-
-  console.log("getApiUrl", {
-    platform: Platform.OS,
-    configuredApiUrl: apiUrl,
-    resolvedApiUrl,
-  });
 
   return resolvedApiUrl;
 };

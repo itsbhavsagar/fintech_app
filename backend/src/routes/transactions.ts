@@ -1,22 +1,15 @@
 import { Router } from "express";
+import { authenticate } from "../middleware/auth";
+import { formatTransaction } from "../lib/transactions";
 import prisma from "../prisma";
 
 const router = Router();
 
-const resolveUserId = async (req: any) => {
-  if (req.user?.id) return req.user.id;
-  if (req.query.userId) return String(req.query.userId);
-  const demoUser = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
-  return demoUser?.id ?? null;
-};
-
-router.get("/", async (req, res, next) => {
+router.get("/", authenticate, async (req, res, next) => {
   try {
-    const userId = await resolveUserId(req);
+    const userId = req.user?.id;
     if (!userId) {
-      return res.status(404).json({ error: "User not found." });
+      return res.status(401).json({ error: "Unauthorized." });
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -25,7 +18,7 @@ router.get("/", async (req, res, next) => {
       include: { property: true },
     });
 
-    res.json(transactions);
+    res.json(transactions.map(formatTransaction));
   } catch (error) {
     next(error);
   }

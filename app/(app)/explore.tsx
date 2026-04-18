@@ -6,7 +6,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Property } from "../../src/types/api";
 import { PropertyCard } from "../../src/components/property/PropertyCard";
 import { useVoiceSearch } from "../../src/hooks/useVoiceSearch";
-import { useProperties } from "../../src/hooks/useBackend";
+import {
+  useAddToWatchlist,
+  useProperties,
+  useRemoveFromWatchlist,
+  useWatchlist,
+} from "../../src/hooks/useBackend";
 
 const typeOptions = [
   "All",
@@ -27,9 +32,11 @@ export default function ExploreScreen() {
     useState<(typeof cityOptions)[number]>("All");
   const [returnsFilter, setReturnsFilter] =
     useState<(typeof returnsOptions)[number]>("Any");
-  const { transcript, isRecording, startRecording, stopRecording } =
-    useVoiceSearch();
+  const { isRecording, startRecording, stopRecording } = useVoiceSearch();
   const { data: properties = [], isLoading } = useProperties();
+  const { data: watchlist = [] } = useWatchlist();
+  const addToWatchlist = useAddToWatchlist();
+  const removeFromWatchlist = useRemoveFromWatchlist();
 
   const filtered = useMemo(() => {
     return properties.filter((property) => {
@@ -55,14 +62,28 @@ export default function ExploreScreen() {
       return matchesQuery && matchesType && matchesCity && matchesReturns;
     });
   }, [query, typeFilter, cityFilter, returnsFilter, properties]);
+  const watchlistIds = useMemo(
+    () => new Set(watchlist.map((item) => item.propertyId)),
+    [watchlist],
+  );
 
   const handleVoice = async () => {
     if (isRecording) {
-      await stopRecording();
-      if (transcript) setQuery(transcript);
+      const text = await stopRecording();
+      if (text) setQuery(text);
       return;
     }
     await startRecording();
+  };
+  const toggleWatchlist = async (propertyId: string) => {
+    const isBookmarked = watchlistIds.has(propertyId);
+
+    if (isBookmarked) {
+      await removeFromWatchlist.mutateAsync(propertyId);
+      return;
+    }
+
+    await addToWatchlist.mutateAsync(propertyId);
   };
 
   const Header = (
@@ -172,7 +193,6 @@ export default function ExploreScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        estimatedItemSize={280}
         ListHeaderComponent={Header}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
@@ -186,7 +206,18 @@ export default function ExploreScreen() {
           >
             <PropertyCard
               property={item}
-              onPress={() => router.push({ pathname: `/property/${item.id}` })}
+              bookmarked={watchlistIds.has(item.id)}
+              onBookmarkPress={() => void toggleWatchlist(item.id)}
+              bookmarkDisabled={
+                addToWatchlist.isPending || removeFromWatchlist.isPending
+              }
+              onPress={() =>
+                router.push({
+                  pathname: "/property/[id]",
+                  params: { id: item.id },
+                })
+              }
+              
             />
           </View>
         )}

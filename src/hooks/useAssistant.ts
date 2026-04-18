@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { streamChat, GroqMessage } from "../lib/groq";
+import type { PortfolioInvestment, Property } from "../types/api";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-export function useAssistant(portfolio: any[], properties: any[]) {
+export function useAssistant(
+  portfolio: PortfolioInvestment[],
+  properties: Property[],
+) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
@@ -46,11 +50,9 @@ Keep responses under 150 words.`;
     };
 
     const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    setMessages([...updatedMessages, { role: "assistant", content: "" }]);
     setInput("");
     setLoading(true);
-
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     const groqMessages: GroqMessage[] = updatedMessages.map((m) => ({
       role: m.role,
@@ -61,7 +63,6 @@ Keep responses under 150 words.`;
       await streamChat(
         groqMessages,
         systemPrompt,
-
         (chunk) => {
           setMessages((prev) => {
             const updated = [...prev];
@@ -73,7 +74,6 @@ Keep responses under 150 words.`;
             return updated;
           });
         },
-
         () => {
           setLoading(false);
         },

@@ -1,16 +1,25 @@
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { FlashList } from "@shopify/flash-list";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useRouter } from "expo-router";
 import { useWatchlist } from "../src/hooks/useBackend";
 import { PropertyCardSmall } from "../src/components/property/PropertyCardSmall";
 import { ScreenWrapper } from "../src/components/layout/ScreenWrapper";
+import { removeWatchlist } from "../src/lib/api";
+import queryClient from "../src/lib/queryClient";
+import type { Property } from "../src/types/api";
+
+type WatchlistEntry = {
+  id: string;
+  propertyId: string;
+  property: Property;
+};
 
 export default function WatchlistScreen() {
   const router = useRouter();
   const { data: watchlist, isLoading, isError, error } = useWatchlist();
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const items = useMemo(
     () =>
@@ -18,8 +27,27 @@ export default function WatchlistScreen() {
     [watchlist, removedIds],
   );
 
-  const removeItem = (propertyId: string) => {
+  const removeItem = async (propertyId: string) => {
+    setActionError(null);
     setRemovedIds((current) => [...current, propertyId]);
+
+    try {
+      await removeWatchlist(propertyId);
+      queryClient.setQueryData<WatchlistEntry[]>(
+        ["watchlist"],
+        (current) =>
+          (current ?? []).filter((item) => item.propertyId !== propertyId),
+      );
+      await queryClient.invalidateQueries({ queryKey: ["watchlist"] });
+    } catch (removeError) {
+      setActionError(
+        removeError instanceof Error
+          ? removeError.message
+          : "Unable to remove property from watchlist.",
+      );
+    } finally {
+      setRemovedIds((current) => current.filter((id) => id !== propertyId));
+    }
   };
 
   if (isLoading) {
@@ -57,6 +85,11 @@ export default function WatchlistScreen() {
           Saved properties you are tracking.
         </Text>
       </View>
+      {actionError ? (
+        <View className="mb-4 rounded-3xl bg-errorLight p-3">
+          <Text className="text-sm font-medium text-error">{actionError}</Text>
+        </View>
+      ) : null}
       {items.length === 0 ? (
         <View className="items-center justify-center py-20">
           <Text className="text-lg font-semibold text-text">
@@ -67,13 +100,13 @@ export default function WatchlistScreen() {
           </Text>
         </View>
       ) : (
-        <FlashList
-          data={items}
-          renderItem={({ item }) => (
+        <View>
+          {items.map((item) => (
             <Swipeable
+              key={item.id}
               renderRightActions={() => (
                 <Pressable
-                  onPress={() => removeItem(item.propertyId)}
+                  onPress={() => void removeItem(item.propertyId)}
                   className="h-full justify-center rounded-l-3xl bg-error px-4"
                 >
                   <Text className="text-sm font-semibold text-white">
@@ -92,9 +125,8 @@ export default function WatchlistScreen() {
                 }
               />
             </Swipeable>
-          )}
-          showsVerticalScrollIndicator={false}
-        />
+          ))}
+        </View>
       )}
     </ScreenWrapper>
   );

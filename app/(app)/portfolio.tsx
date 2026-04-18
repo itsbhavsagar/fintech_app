@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Text, View, ActivityIndicator } from "react-native";
-import { FlashList } from "@shopify/flash-list";
 import { ScreenWrapper } from "../../src/components/layout/ScreenWrapper";
 import { Button } from "../../src/components/ui/Button";
 import { InvestmentCard } from "../../src/components/portfolio/InvestmentCard";
@@ -21,7 +20,7 @@ const monthlyData = [
 
 export default function PortfolioScreen() {
   const { data: portfolio, isLoading, isError, error } = usePortfolio();
-  const investments = portfolio?.investments ?? [];
+  const investments = useMemo(() => portfolio?.investments ?? [], [portfolio]);
   const { insights, loading, generateInsights, hasGenerated } =
     usePortfolioInsights(investments);
 
@@ -87,12 +86,12 @@ export default function PortfolioScreen() {
         <View className="mt-3 flex-row items-center gap-2">
           <View
             className={`rounded-full px-2.5 py-1 ${
-              isPositive ? "bg-success/20" : "bg-destructive/20"
+              isPositive ? "bg-success/20" : "bg-errorLight"
             }`}
           >
             <Text
               className={`text-xs font-semibold ${
-                isPositive ? "text-success" : "text-destructive"
+                isPositive ? "text-success" : "text-error"
               }`}
             >
               {isPositive ? "▲" : "▼"} {returnsPercent}%
@@ -116,7 +115,7 @@ export default function PortfolioScreen() {
           <Text className="text-xs text-textSecondary">Returns</Text>
           <Text
             className={`mt-1 text-base font-semibold ${
-              isPositive ? "text-success" : "text-destructive"
+              isPositive ? "text-success" : "text-error"
             }`}
           >
             {isPositive ? "+" : ""}₹{totalReturns.toLocaleString("en-IN")}
@@ -126,7 +125,7 @@ export default function PortfolioScreen() {
           <Text className="text-xs text-textSecondary">Return %</Text>
           <Text
             className={`mt-1 text-base font-semibold ${
-              isPositive ? "text-success" : "text-destructive"
+              isPositive ? "text-success" : "text-error"
             }`}
           >
             {isPositive ? "+" : ""}
@@ -198,12 +197,11 @@ export default function PortfolioScreen() {
       ) : null}
 
       <Text className="mb-4 text-lg font-semibold text-text">Investments</Text>
-      <FlashList
-        data={investments}
-        renderItem={({ item }) => <InvestmentCard investment={item} />}
-        estimatedItemSize={80}
-        showsVerticalScrollIndicator={false}
-      />
+      <View className="gap-4">
+        {investments.map((investment) => (
+          <InvestmentCard key={investment.id} investment={investment} />
+        ))}
+      </View>
     </ScreenWrapper>
   );
 }

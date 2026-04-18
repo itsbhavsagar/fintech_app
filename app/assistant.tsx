@@ -49,7 +49,6 @@ export default function AssistantScreen() {
   );
   const {
     isRecording,
-    transcript,
     loading: voiceLoading,
     startRecording,
     stopRecording,
@@ -63,8 +62,8 @@ export default function AssistantScreen() {
 
   const handleVoicePress = async () => {
     if (isRecording) {
-      await stopRecording();
-      if (transcript) setInput(transcript);
+      const text = await stopRecording();
+      if (text) setInput(text);
       return;
     }
     await startRecording();

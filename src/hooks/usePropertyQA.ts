@@ -20,12 +20,9 @@ export const usePropertyQA = (property: Property) => {
       content: input.trim(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage, { role: "assistant", content: "" }]);
     setLoading(true);
     setInput("");
-
-    // Add empty assistant message immediately
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     const systemPrompt = `You are a real estate investment advisor for BrickShare.
 Answer questions about this property using only the data provided.
@@ -57,7 +54,6 @@ Property data: ${JSON.stringify({
       await streamChat(
         groqMessages,
         systemPrompt,
-
         (chunk) => {
           setMessages((prev) => {
             const updated = [...prev];
@@ -69,7 +65,6 @@ Property data: ${JSON.stringify({
             return updated;
           });
         },
-
         () => {
           setLoading(false);
         },

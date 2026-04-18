@@ -1,14 +1,18 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useEffect, useMemo, useState } from "react";
-import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { PropertyCard } from "../../src/components/property/PropertyCard";
 import { PropertyCardSmall } from "../../src/components/property/PropertyCardSmall";
 import { AuthUser, getStoredUser } from "../../src/lib/auth";
-import { Property } from "../../src/types/api";
-import { useProperties, usePortfolio } from "../../src/hooks/useBackend";
+import {
+  useAddToWatchlist,
+  usePortfolio,
+  useProperties,
+  useRemoveFromWatchlist,
+  useWatchlist,
+} from "../../src/hooks/useBackend";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -46,6 +50,10 @@ export default function HomeScreen() {
   console.log("HomeScreen: portfolioError", portfolioError);
   console.log("HomeScreen: portfolioFetchError", portfolioFetchError);
 
+  const { data: watchlist = [] } = useWatchlist();
+  const addToWatchlist = useAddToWatchlist();
+  const removeFromWatchlist = useRemoveFromWatchlist();
+
   const featured = useMemo(
     () => properties?.filter((property) => property.isFeatured) || [],
     [properties],
@@ -55,6 +63,10 @@ export default function HomeScreen() {
     () => properties?.filter((property) => !property.isFeatured) || [],
     [properties],
   );
+  const watchlistIds = useMemo(
+    () => new Set(watchlist.map((item) => item.propertyId)),
+    [watchlist],
+  );
 
   const totalInvested = portfolio?.totalInvested || 0;
 
@@ -63,6 +75,16 @@ export default function HomeScreen() {
     0;
 
   const totalReturns = currentValue - totalInvested;
+  const toggleWatchlist = async (propertyId: string) => {
+    const isBookmarked = watchlistIds.has(propertyId);
+
+    if (isBookmarked) {
+      await removeFromWatchlist.mutateAsync(propertyId);
+      return;
+    }
+
+    await addToWatchlist.mutateAsync(propertyId);
+  };
 
   if (propertiesLoading || portfolioLoading) {
     return (
@@ -134,7 +156,10 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <Pressable className="rounded-3xl border border-border bg-white p-3">
+          <Pressable
+            onPress={() => router.push("/notifications")}
+            className="rounded-3xl border border-border bg-white p-3"
+          >
             <Ionicons name="notifications-outline" size={22} color="#4F46E5" />
           </Pressable>
         </View>
@@ -184,23 +209,30 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <FlashList<Property>
-          data={featured}
-          renderItem={({ item }) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 4 }}
+        >
+          {featured.map((item) => (
             <PropertyCard
+              key={item.id}
               property={item}
+              bookmarked={watchlistIds.has(item.id)}
+              onBookmarkPress={() => void toggleWatchlist(item.id)}
+              bookmarkDisabled={
+                addToWatchlist.isPending || removeFromWatchlist.isPending
+              }
               onPress={() =>
                 router.push({
                   pathname: "/property/[id]",
                   params: { id: item.id },
                 })
               }
-              className="mr-4 mb-2"
+              className="mb-2 mr-4 w-72"
             />
-          )}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
+          ))}
+        </ScrollView>
 
         <View className="mt-8 mb-4 flex-row items-center justify-between">
           <Text className="text-lg font-semibold text-text">Trending Now</Text>
@@ -210,10 +242,10 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        <FlashList<Property>
-          data={trending}
-          renderItem={({ item }) => (
+        <View>
+          {trending.map((item) => (
             <PropertyCardSmall
+              key={item.id}
               property={item}
               onPress={() =>
                 router.push({
@@ -222,9 +254,8 @@ export default function HomeScreen() {
                 })
               }
             />
-          )}
-          showsVerticalScrollIndicator={false}
-        />
+          ))}
+        </View>
       </ScrollView>
 
       <Pressable

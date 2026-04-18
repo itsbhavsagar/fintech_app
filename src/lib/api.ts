@@ -2,8 +2,8 @@ import { getApiUrl } from "./env";
 import { getToken } from "./auth";
 import type {
   Notification,
-  Property,
   PortfolioInvestment,
+  Property,
   Transaction,
 } from "../types/api";
 
@@ -12,30 +12,25 @@ const baseUrl = getApiUrl();
 const fetcher = async <T>(path: string, options?: RequestInit) => {
   const url = `${baseUrl}${path}`;
   const token = await getToken();
-  console.log("fetcher request", {
-    method: options?.method || "GET",
-    url,
-    options,
-  });
+  const headers = new Headers(options?.headers);
+
+  headers.set("Content-Type", "application/json");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
 
   const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
     ...options,
+    headers,
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
     const errorMessage = `API request failed: ${response.status} ${errorBody}`;
-    console.error("fetcher error", { url, status: response.status, errorBody });
     throw new Error(errorMessage);
   }
 
-  const json = (await response.json()) as T;
-  console.log("fetcher response", { url, result: json });
-  return json;
+  return (await response.json()) as T;
 };
 
 export const getProperties = async (): Promise<Property[]> => {
@@ -60,9 +55,9 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 };
 
 export const getWatchlist = async (): Promise<
-  Array<{ id: string; propertyId: string; property: Property }>
+  { id: string; propertyId: string; property: Property }[]
 > => {
-  return fetcher<Array<{ id: string; propertyId: string; property: Property }>>(
+  return fetcher<{ id: string; propertyId: string; property: Property }[]>(
     "/api/watchlist",
   );
 };

@@ -34,12 +34,10 @@ router.post("/register", async (req, res, next) => {
     const token = jwt.sign({ userId: user.id }, jwtSecret, {
       expiresIn: "30d",
     });
-    return res
-      .status(201)
-      .json({
-        user: { id: user.id, email: user.email, name: user.name },
-        token,
-      });
+    return res.status(201).json({
+      user: { id: user.id, email: user.email, name: user.name },
+      token,
+    });
   } catch (error) {
     next(error);
   }
