@@ -1,5 +1,5 @@
 import { getApiUrl } from "./env";
-import { getToken } from "./auth";
+import { clearAuthData, getToken } from "./auth";
 import type {
   Notification,
   PortfolioInvestment,
@@ -26,11 +26,20 @@ const fetcher = async <T>(path: string, options?: RequestInit) => {
 
   if (!response.ok) {
     const errorBody = await response.text();
+    if (response.status === 401) {
+      await clearAuthData();
+    }
+
     const errorMessage = `API request failed: ${response.status} ${errorBody}`;
     throw new Error(errorMessage);
   }
 
-  return (await response.json()) as T;
+  if (response.status === 204) {
+    return null as unknown as T;
+  }
+
+  const text = await response.text();
+  return text ? (JSON.parse(text) as T) : (null as unknown as T);
 };
 
 export const getProperties = async (): Promise<Property[]> => {

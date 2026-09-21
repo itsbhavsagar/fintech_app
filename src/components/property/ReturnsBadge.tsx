@@ -10,9 +10,11 @@ export const ReturnsBadge = ({ value, className }: ReturnsBadgeProps) => {
     .filter(Boolean)
     .join(" ");
 
+  const cleanValue = value.replace("%", "");
+
   return (
     <Text className={`${classes} text-sm font-semibold text-gold`}>
-      {value} p.a.
+      {cleanValue} p.a.
     </Text>
   );
 };

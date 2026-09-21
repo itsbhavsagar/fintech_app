@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { demoUser, handleOrFallback } from "../demo";
 import prisma from "../prisma";
 
 const router = Router();
@@ -39,7 +40,19 @@ router.post("/register", async (req, res, next) => {
       token,
     });
   } catch (error) {
-    next(error);
+    handleOrFallback(error, next, () => {
+      const token = jwt.sign({ userId: demoUser.id }, jwtSecret, {
+        expiresIn: "30d",
+      });
+      res.status(201).json({
+        user: {
+          ...demoUser,
+          email: req.body.email || demoUser.email,
+          name: req.body.name || demoUser.name,
+        },
+        token,
+      });
+    });
   }
 });
 
@@ -70,7 +83,15 @@ router.post("/login", async (req, res, next) => {
       token,
     });
   } catch (error) {
-    next(error);
+    handleOrFallback(error, next, () => {
+      const token = jwt.sign({ userId: demoUser.id }, jwtSecret, {
+        expiresIn: "30d",
+      });
+      res.json({
+        user: { ...demoUser, email: req.body.email || demoUser.email },
+        token,
+      });
+    });
   }
 });
 

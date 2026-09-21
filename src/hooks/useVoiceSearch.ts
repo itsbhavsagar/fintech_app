@@ -1,51 +1,52 @@
 import { useState } from "react";
-import { Audio } from "expo-av";
+import {
+  AudioModule,
+  RecordingPresets,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
 import { transcribeAudio } from "../lib/whisper";
 
 export const useVoiceSearch = () => {
-  const [isRecording, setIsRecording] = useState(false);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder);
   const [transcript, setTranscript] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
 
   const startRecording = async () => {
     try {
       setError(null);
       setTranscript("");
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== "granted") {
+      const permission = await AudioModule.requestRecordingPermissionsAsync();
+      if (!permission.granted) {
         setError("Microphone permission is required.");
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const newRecording = new Audio.Recording();
-      await newRecording.prepareToRecordAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      await newRecording.startAsync();
-      setRecording(newRecording);
-      setIsRecording(true);
+      await recorder.prepareToRecordAsync();
+      recorder.record();
     } catch {
       setError("Unable to start recording.");
     }
   };
 
   const stopRecording = async (): Promise<string> => {
-    if (!recording) {
+    if (!recorderState.isRecording && !recorder.isRecording) {
       return "";
     }
 
     try {
       setLoading(true);
-      await recording.stopAndUnloadAsync();
-      setIsRecording(false);
-      const uri = recording.getURI();
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
+      const uri = recorder.uri;
 
       if (!uri) {
         setError("Recording failed to save.");
@@ -62,12 +63,11 @@ export const useVoiceSearch = () => {
       return "";
     } finally {
       setLoading(false);
-      setRecording(null);
     }
   };
 
   return {
-    isRecording,
+    isRecording: recorderState.isRecording || recorder.isRecording,
     transcript,
     loading,
     error,

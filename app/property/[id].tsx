@@ -111,7 +111,7 @@ export default function PropertyDetailScreen() {
 
           <View className="px-6 py-6">
             <View className="mb-3 flex-row items-center justify-between">
-              <View>
+              <View className="flex-1 mr-4">
                 <Text className="text-2xl font-semibold text-text">
                   {property.title}
                 </Text>
@@ -119,7 +119,7 @@ export default function PropertyDetailScreen() {
                   {property.city} • {property.type}
                 </Text>
               </View>
-              <ReturnsBadge value={property.expectedReturn.replace("%", "")} />
+              <ReturnsBadge value={property.expectedReturn} className="shrink-0" />
             </View>
 
             <View className="mb-6 rounded-3xl bg-surface p-4">
@@ -217,7 +217,7 @@ export default function PropertyDetailScreen() {
                 </View>
               )}
 
-              {summary && (
+              {!!summary && (
                 <View className="mt-2">
                   <Text
                     className="text-sm leading-7 text-text"

@@ -65,7 +65,7 @@ export const PropertyCard = ({
         </View>
 
         <View className="flex-row items-center justify-between">
-          <ReturnsBadge value={property.expectedReturn.replace("%", "")} />
+          <ReturnsBadge value={property.expectedReturn} />
           <Text className="text-xs text-textSecondary">Min ₹10k</Text>
         </View>
 

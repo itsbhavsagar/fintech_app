@@ -33,7 +33,7 @@ export const PropertyCardSmall = ({
             {property.location}
           </Text>
           <View className="mt-3 flex-row items-center gap-2">
-            <ReturnsBadge value={property.expectedReturn.replace("%", "")} />
+            <ReturnsBadge value={property.expectedReturn} />
             <Text className="text-xs text-textSecondary">
               {property.occupancy}% occupancy
             </Text>

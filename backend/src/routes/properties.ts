@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { demoProperties, getDemoPropertyById, handleOrFallback } from "../demo";
 import prisma from "../prisma";
 
 const router = Router();
@@ -11,7 +12,9 @@ router.get("/", async (req, res, next) => {
     });
     res.json(properties);
   } catch (error) {
-    next(error);
+    handleOrFallback(error, next, () => {
+      res.json(demoProperties);
+    });
   }
 });
 
@@ -27,7 +30,15 @@ router.get("/:id", async (req, res, next) => {
     }
     res.json(property);
   } catch (error) {
-    next(error);
+    handleOrFallback(error, next, () => {
+      const property = getDemoPropertyById(req.params.id);
+      if (!property) {
+        res.status(404).json({ error: "Property not found." });
+        return;
+      }
+
+      res.json({ ...property, chunks: [] });
+    });
   }
 });
 

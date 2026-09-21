@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getDemoPropertyById, handleOrFallback } from "../demo";
 import { authenticate } from "../middleware/auth";
 import prisma from "../prisma";
 
@@ -69,7 +70,25 @@ router.post("/", authenticate, async (req, res, next) => {
 
     res.status(201).json(investment);
   } catch (error) {
-    next(error);
+    handleOrFallback(error, next, () => {
+      const { propertyId, units, amount } = req.body;
+      const property = getDemoPropertyById(propertyId);
+      if (!property) {
+        res.status(404).json({ error: "Property not found." });
+        return;
+      }
+
+      res.status(201).json({
+        id: `demo-investment-${propertyId}`,
+        userId: req.user?.id ?? "demo-user",
+        propertyId,
+        units,
+        amount,
+        currentValue: amount,
+        returnPercent: "0.0%",
+        createdAt: new Date().toISOString(),
+      });
+    });
   }
 });
 

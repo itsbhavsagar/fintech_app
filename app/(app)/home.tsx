@@ -41,15 +41,6 @@ export default function HomeScreen() {
     error: portfolioFetchError,
   } = usePortfolio();
 
-  console.log("HomeScreen: propertiesLoading", propertiesLoading);
-  console.log("HomeScreen: portfolioLoading", portfolioLoading);
-  console.log("HomeScreen: properties", properties);
-  console.log("HomeScreen: portfolio", portfolio);
-  console.log("HomeScreen: propertiesError", propertiesError);
-  console.log("HomeScreen: propertiesFetchError", propertiesFetchError);
-  console.log("HomeScreen: portfolioError", portfolioError);
-  console.log("HomeScreen: portfolioFetchError", portfolioFetchError);
-
   const { data: watchlist = [] } = useWatchlist();
   const addToWatchlist = useAddToWatchlist();
   const removeFromWatchlist = useRemoveFromWatchlist();

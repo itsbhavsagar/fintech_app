@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { isDemoFallbackEnabled } from "../demo";
 import { authenticate } from "../middleware/auth";
 
 const router = Router();
@@ -45,6 +46,11 @@ const getGroqApiKey = () => {
   return apiKey;
 };
 
+const createDemoReply = (messages: ChatMessage[]) => {
+  const latest = messages[messages.length - 1]?.content ?? "this investment";
+  return `Demo mode is running without a Groq API key. For "${latest}", focus on occupancy, lease term, tenant quality, and whether the expected return fits your risk appetite.`;
+};
+
 router.post("/", authenticate, async (req, res, next) => {
   try {
     const { messages, systemPrompt, maxTokens, temperature, responseFormat } =
@@ -63,6 +69,11 @@ router.post("/", authenticate, async (req, res, next) => {
       });
     }
 
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey && isDemoFallbackEnabled()) {
+      return res.json({ content: createDemoReply(safeMessages) });
+    }
+
     const response = await fetch(GROQ_CHAT_API_URL, {
       method: "POST",
       headers: {
@@ -70,10 +81,10 @@ router.post("/", authenticate, async (req, res, next) => {
         Authorization: `Bearer ${getGroqApiKey()}`,
       },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: "openai/gpt-oss-20b",
         messages: [{ role: "system", content: systemPrompt }, ...safeMessages],
         stream: false,
-        max_tokens: clampNumber(maxTokens, 1, 500, 250),
+        max_tokens: clampNumber(maxTokens, 1, 2048, 1024),
         temperature: clampNumber(temperature, 0, 2, 0.7),
         ...(responseFormat === "json"
           ? { response_format: { type: "json_object" } }
@@ -109,6 +120,11 @@ router.post("/transcribe", authenticate, async (req, res, next) => {
 
     if (typeof audioBase64 !== "string" || audioBase64.trim().length === 0) {
       return res.status(400).json({ error: "audioBase64 is required." });
+    }
+
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey && isDemoFallbackEnabled()) {
+      return res.json({ text: "commercial office" });
     }
 
     const audioBuffer = Buffer.from(audioBase64, "base64");

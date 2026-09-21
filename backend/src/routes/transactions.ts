@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { demoTransactions, handleOrFallback } from "../demo";
 import { authenticate } from "../middleware/auth";
 import { formatTransaction } from "../lib/transactions";
 import prisma from "../prisma";
@@ -20,7 +21,9 @@ router.get("/", authenticate, async (req, res, next) => {
 
     res.json(transactions.map(formatTransaction));
   } catch (error) {
-    next(error);
+    handleOrFallback(error, next, () => {
+      res.json(demoTransactions);
+    });
   }
 });
 
