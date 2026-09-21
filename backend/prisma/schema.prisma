@@ -120,3 +120,11 @@ model Transaction {
   amount     Float
   createdAt  DateTime @default(now())
 }
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  phone     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

@@ -150,7 +150,7 @@ export default function LoginScreen() {
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => setError("Password reset is not configured yet.")}
+          onPress={() => router.push("/auth/forgot-password")}
           hitSlop={8}
         >
           <Text className="text-sm font-semibold text-primary">

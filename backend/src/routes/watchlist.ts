@@ -1,9 +1,4 @@
 import { Router } from "express";
-import {
-  demoWatchlist,
-  getDemoPropertyById,
-  handleOrFallback,
-} from "../demo";
 import { authenticate } from "../middleware/auth";
 import prisma from "../prisma";
 
@@ -23,9 +18,7 @@ router.get("/", authenticate, async (req, res, next) => {
 
     res.json(watchlist);
   } catch (error) {
-    handleOrFallback(error, next, () => {
-      res.json(demoWatchlist);
-    });
+    next(error);
   }
 });
 
@@ -54,19 +47,7 @@ router.post("/:propertyId", authenticate, async (req, res, next) => {
 
     res.status(201).json(watchlistEntry);
   } catch (error) {
-    handleOrFallback(error, next, () => {
-      const property = getDemoPropertyById(req.params.propertyId);
-      if (!property) {
-        res.status(404).json({ error: "Property not found." });
-        return;
-      }
-
-      res.status(201).json({
-        id: `demo-watchlist-${property.id}`,
-        propertyId: property.id,
-        property,
-      });
-    });
+    next(error);
   }
 });
 
@@ -81,9 +62,7 @@ router.delete("/:propertyId", authenticate, async (req, res, next) => {
     await prisma.watchlist.deleteMany({ where: { userId, propertyId } });
     res.status(204).send();
   } catch (error) {
-    handleOrFallback(error, next, () => {
-      res.status(204).send();
-    });
+    next(error);
   }
 });
 

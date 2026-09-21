@@ -40,7 +40,7 @@ export default function AssistantScreen() {
   } = useProperties();
 
   const investments = portfolio?.investments ?? [];
-  const propertyData = properties ?? [];
+  const propertyData = properties?.data ?? [];
   const isLoading = portfolioLoading || propertiesLoading;
 
   const { messages, loading, input, setInput, sendMessage } = useAssistant(

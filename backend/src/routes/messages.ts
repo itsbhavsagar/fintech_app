@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { handleOrFallback } from "../demo";
 import { authenticate } from "../middleware/auth";
 import prisma from "../prisma";
 
@@ -24,9 +23,7 @@ router.get("/:sessionId", authenticate, async (req, res, next) => {
     });
     res.json(messages);
   } catch (error) {
-    handleOrFallback(error, next, () => {
-      res.json([]);
-    });
+    next(error);
   }
 });
 

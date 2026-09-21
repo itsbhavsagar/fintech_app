@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { demoNotifications, handleOrFallback } from "../demo";
 import { authenticate } from "../middleware/auth";
 import {
   formatNotificationDate,
@@ -72,9 +71,7 @@ router.get("/", authenticate, async (req, res, next) => {
 
     res.json(notifications);
   } catch (error) {
-    handleOrFallback(error, next, () => {
-      res.json(demoNotifications);
-    });
+    next(error);
   }
 });
 

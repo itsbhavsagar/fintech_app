@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
 import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Property } from "../../types/api";
@@ -9,20 +10,26 @@ export type PropertyCardSmallProps = {
   onPress?: () => void;
 };
 
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80";
+
 export const PropertyCardSmall = ({
   property,
   onPress,
-}: PropertyCardSmallProps) => (
+}: PropertyCardSmallProps) => {
+  const [imageError, setImageError] = useState(false);
+
+  return (
   <Pressable
     onPress={onPress}
     className="mb-4 overflow-hidden rounded-3xl bg-white p-3 shadow-sm"
   >
     <View className="flex-row gap-3">
       <Image
-        source={{ uri: property.images[0] }}
+        source={{ uri: imageError ? FALLBACK_IMAGE : property.images[0] }}
         contentFit="cover"
         style={{ width: 96, height: 96 }}
         className="h-24 w-24 rounded-3xl"
+        onError={() => setImageError(true)}
       />
       <View className="flex-1 justify-between">
         <View>
@@ -51,4 +58,5 @@ export const PropertyCardSmall = ({
       </View>
     </View>
   </Pressable>
-);
+  );
+};

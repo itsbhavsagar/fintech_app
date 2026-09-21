@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
 import { Image } from "expo-image";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Property } from "../../types/api";
@@ -14,6 +15,8 @@ export type PropertyCardProps = {
   bookmarkDisabled?: boolean;
 };
 
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80";
+
 export const PropertyCard = ({
   property,
   onPress,
@@ -22,6 +25,8 @@ export const PropertyCard = ({
   onBookmarkPress,
   bookmarkDisabled = false,
 }: PropertyCardProps) => {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <Pressable
       onPress={onPress}
@@ -29,9 +34,10 @@ export const PropertyCard = ({
     >
       <View className="relative h-40 overflow-hidden rounded-t-3xl">
         <Image
-          source={{ uri: property.images[0] }}
+          source={{ uri: imageError ? FALLBACK_IMAGE : property.images[0] }}
           contentFit="cover"
           style={{ width: "100%", height: "100%" }}
+          onError={() => setImageError(true)}
         />
         <View className="absolute inset-x-0 top-3 flex-row items-center justify-between px-3">
           <Text className="rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-textSecondary">

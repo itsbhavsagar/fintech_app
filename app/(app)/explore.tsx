@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View, ActivityIndicator } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -8,7 +8,7 @@ import { PropertyCard } from "../../src/components/property/PropertyCard";
 import { useVoiceSearch } from "../../src/hooks/useVoiceSearch";
 import {
   useAddToWatchlist,
-  useProperties,
+  useInfiniteProperties,
   useRemoveFromWatchlist,
   useWatchlist,
 } from "../../src/hooks/useBackend";
@@ -20,7 +20,7 @@ const typeOptions = [
   "Warehouse",
   "Coworking",
 ] as const;
-const cityOptions = ["All", "Delhi", "Noida", "Gurgaon", "Bangalore"] as const;
+const cityOptions = ["All", "Delhi NCR", "Mumbai", "Bangalore", "Hyderabad", "Pune", "Chennai"] as const;
 const returnsOptions = ["Any", "8%+", "10%+", "12%+"] as const;
 
 export default function ExploreScreen() {
@@ -32,36 +32,31 @@ export default function ExploreScreen() {
     useState<(typeof cityOptions)[number]>("All");
   const [returnsFilter, setReturnsFilter] =
     useState<(typeof returnsOptions)[number]>("Any");
+  
   const { isRecording, startRecording, stopRecording } = useVoiceSearch();
-  const { data: properties = [], isLoading } = useProperties();
+  
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteProperties({
+    q: query,
+    type: typeFilter,
+    city: cityFilter,
+    returns: returnsFilter,
+  });
+
+  const properties = useMemo(() => {
+    if (!data) return [];
+    return data.pages.flatMap((page) => page.data);
+  }, [data]);
+
   const { data: watchlist = [] } = useWatchlist();
   const addToWatchlist = useAddToWatchlist();
   const removeFromWatchlist = useRemoveFromWatchlist();
 
-  const filtered = useMemo(() => {
-    return properties.filter((property) => {
-      const matchesQuery = query
-        ? [property.title, property.location, property.type, property.city]
-            .join(" ")
-            .toLowerCase()
-            .includes(query.toLowerCase())
-        : true;
-      const matchesType =
-        typeFilter === "All" ? true : property.type === typeFilter;
-      const matchesCity =
-        cityFilter === "All" ? true : property.city === cityFilter;
-      const returnsValue = Number(property.expectedReturn.replace("%", ""));
-      const matchesReturns =
-        returnsFilter === "Any"
-          ? true
-          : returnsFilter === "8%+"
-            ? returnsValue >= 8
-            : returnsFilter === "10%+"
-              ? returnsValue >= 10
-              : returnsValue >= 12;
-      return matchesQuery && matchesType && matchesCity && matchesReturns;
-    });
-  }, [query, typeFilter, cityFilter, returnsFilter, properties]);
   const watchlistIds = useMemo(
     () => new Set(watchlist.map((item) => item.propertyId)),
     [watchlist],
@@ -75,6 +70,7 @@ export default function ExploreScreen() {
     }
     await startRecording();
   };
+  
   const toggleWatchlist = async (propertyId: string) => {
     const isBookmarked = watchlistIds.has(propertyId);
 
@@ -174,7 +170,7 @@ export default function ExploreScreen() {
         </View>
       )}
 
-      {!isLoading && filtered.length === 0 && (
+      {!isLoading && properties.length === 0 && (
         <View className="items-center justify-center py-20">
           <Text className="text-lg font-semibold text-text">
             No properties found
@@ -190,12 +186,25 @@ export default function ExploreScreen() {
   return (
     <View className="flex-1 bg-background">
       <FlashList<Property>
-        data={filtered}
+        data={properties}
         keyExtractor={(item) => item.id}
         numColumns={2}
         ListHeaderComponent={Header}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" color="#4F46E5" />
+            </View>
+          ) : null
+        }
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
         renderItem={({ item, index }) => (
           <View
             style={{

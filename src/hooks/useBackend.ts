@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addWatchlist,
   createInvestment,
@@ -18,9 +18,23 @@ import type {
 } from "../types/api";
 
 export const useProperties = () => {
-  return useQuery<Property[]>({
+  return useQuery({
     queryKey: ["properties"],
-    queryFn: getProperties,
+    queryFn: () => getProperties(),
+  });
+};
+
+export const useInfiniteProperties = (filters: {
+  q?: string;
+  type?: string;
+  city?: string;
+  returns?: string;
+}) => {
+  return useInfiniteQuery({
+    queryKey: ["properties", filters],
+    queryFn: ({ pageParam = 1 }) => getProperties({ ...filters, page: pageParam }),
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
   });
 };
 

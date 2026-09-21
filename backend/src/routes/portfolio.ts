@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { demoPortfolio, handleOrFallback } from "../demo";
 import { authenticate } from "../middleware/auth";
 import prisma from "../prisma";
 
@@ -38,9 +37,7 @@ router.get("/", authenticate, async (req, res, next) => {
     );
     res.json({ investments: formatted, totalInvested });
   } catch (error) {
-    handleOrFallback(error, next, () => {
-      res.json(demoPortfolio);
-    });
+    next(error);
   }
 });
 

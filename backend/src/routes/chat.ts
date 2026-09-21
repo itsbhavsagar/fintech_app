@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { isDemoFallbackEnabled } from "../demo";
 import { authenticate } from "../middleware/auth";
 
 const router = Router();
@@ -46,10 +45,6 @@ const getGroqApiKey = () => {
   return apiKey;
 };
 
-const createDemoReply = (messages: ChatMessage[]) => {
-  const latest = messages[messages.length - 1]?.content ?? "this investment";
-  return `Demo mode is running without a Groq API key. For "${latest}", focus on occupancy, lease term, tenant quality, and whether the expected return fits your risk appetite.`;
-};
 
 router.post("/", authenticate, async (req, res, next) => {
   try {
@@ -70,8 +65,8 @@ router.post("/", authenticate, async (req, res, next) => {
     }
 
     const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey && isDemoFallbackEnabled()) {
-      return res.json({ content: createDemoReply(safeMessages) });
+    if (!apiKey) {
+      return res.status(500).json({ error: "Missing GROQ_API_KEY." });
     }
 
     const response = await fetch(GROQ_CHAT_API_URL, {
@@ -123,8 +118,8 @@ router.post("/transcribe", authenticate, async (req, res, next) => {
     }
 
     const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey && isDemoFallbackEnabled()) {
-      return res.json({ text: "commercial office" });
+    if (!apiKey) {
+      return res.status(500).json({ error: "Missing GROQ_API_KEY." });
     }
 
     const audioBuffer = Buffer.from(audioBase64, "base64");

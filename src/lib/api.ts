@@ -42,8 +42,26 @@ const fetcher = async <T>(path: string, options?: RequestInit) => {
   return text ? (JSON.parse(text) as T) : (null as unknown as T);
 };
 
-export const getProperties = async (): Promise<Property[]> => {
-  return fetcher<Property[]>("/api/properties");
+export const getProperties = async (params?: {
+  q?: string;
+  type?: string;
+  city?: string;
+  returns?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ data: Property[]; nextPage: number | null; total: number }> => {
+  const query = new URLSearchParams();
+  if (params?.q) query.append("q", params.q);
+  if (params?.type) query.append("type", params.type);
+  if (params?.city) query.append("city", params.city);
+  if (params?.returns) query.append("returns", params.returns);
+  if (params?.page) query.append("page", params.page.toString());
+  if (params?.limit) query.append("limit", params.limit.toString());
+
+  const queryString = query.toString() ? `?${query.toString()}` : "";
+  return fetcher<{ data: Property[]; nextPage: number | null; total: number }>(
+    `/api/properties${queryString}`
+  );
 };
 
 export const getPropertyById = async (id: string): Promise<Property> => {

@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, RefreshControl } from "react-native";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,10 +28,11 @@ export default function HomeScreen() {
   }, []);
 
   const {
-    data: properties,
+    data: propertiesResponse,
     isLoading: propertiesLoading,
     isError: propertiesError,
     error: propertiesFetchError,
+    refetch: refetchProperties,
   } = useProperties();
 
   const {
@@ -39,20 +40,33 @@ export default function HomeScreen() {
     isLoading: portfolioLoading,
     isError: portfolioError,
     error: portfolioFetchError,
+    refetch: refetchPortfolio,
   } = usePortfolio();
 
-  const { data: watchlist = [] } = useWatchlist();
+  const { data: watchlist = [], refetch: refetchWatchlist } = useWatchlist();
   const addToWatchlist = useAddToWatchlist();
   const removeFromWatchlist = useRemoveFromWatchlist();
 
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      refetchProperties(),
+      refetchPortfolio(),
+      refetchWatchlist(),
+    ]);
+    setRefreshing(false);
+  };
+
   const featured = useMemo(
-    () => properties?.filter((property) => property.isFeatured) || [],
-    [properties],
+    () => propertiesResponse?.data.filter((property) => property.isFeatured) || [],
+    [propertiesResponse],
   );
 
   const trending = useMemo(
-    () => properties?.filter((property) => !property.isFeatured) || [],
-    [properties],
+    () => propertiesResponse?.data.filter((property) => !property.isFeatured) || [],
+    [propertiesResponse],
   );
   const watchlistIds = useMemo(
     () => new Set(watchlist.map((item) => item.propertyId)),
@@ -136,6 +150,9 @@ export default function HomeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 16, paddingBottom: 0 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4F46E5" />
+        }
       >
         <View className="mb-6 flex-row items-center justify-between">
           <View>
